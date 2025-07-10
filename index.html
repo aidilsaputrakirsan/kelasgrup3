@@ -80,6 +80,22 @@
             
             // Setup login form
             setupLoginForm();
+            // Force hide loading overlay setelah 3 detik (fallback)
+            setTimeout(() => {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay && overlay.style.display !== 'none') {
+                    console.log('⚠️ Force hiding loading overlay');
+                    overlay.style.display = 'none';
+                }
+            }, 3000);
+
+            // Hide loading saat halaman akan unload (sebelum redirect)
+            window.addEventListener('beforeunload', () => {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            });
             
             // Load saved username if "remember me" was checked
             loadSavedCredentials();
@@ -87,64 +103,5 @@
     </script>
     <!-- Tambahkan script debugging sebelum </body> di index.html -->
 
-    <script>
-    // Debug loading overlay
-    console.log('🔍 Login page loaded');
-
-    // Override hideLoading untuk debugging
-    const originalHideLoading = UIUtils.hideLoading;
-    UIUtils.hideLoading = function() {
-        console.log('🟢 hideLoading() dipanggil');
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            console.log('🟢 Loading overlay ditemukan, menghilangkan...');
-            overlay.style.display = 'none';
-            console.log('🟢 Loading overlay display:', overlay.style.display);
-        } else {
-            console.log('❌ Loading overlay tidak ditemukan!');
-        }
-    };
-
-    // Override showLoading untuk debugging  
-    const originalShowLoading = UIUtils.showLoading;
-    UIUtils.showLoading = function() {
-        console.log('🟡 showLoading() dipanggil');
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            overlay.style.display = 'flex';
-            console.log('🟡 Loading overlay ditampilkan');
-        }
-    };
-
-    // Monitor kapan redirect terjadi
-    const originalLocationHref = Object.getOwnPropertyDescriptor(window.location, 'href') || 
-                                Object.getOwnPropertyDescriptor(Location.prototype, 'href');
-
-    let currentHref = window.location.href;
-    Object.defineProperty(window.location, 'href', {
-        set: function(value) {
-            console.log('🚀 Redirect ke:', value);
-            console.log('🚀 Loading overlay saat ini:', document.getElementById('loadingOverlay')?.style.display);
-            
-            // Pastikan loading hilang sebelum redirect
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay && overlay.style.display !== 'none') {
-                console.log('⚠️ Loading masih muncul, paksa hilangkan');
-                overlay.style.display = 'none';
-            }
-            
-            // Lakukan redirect
-            if (originalLocationHref && originalLocationHref.set) {
-                originalLocationHref.set.call(this, value);
-            } else {
-                currentHref = value;
-                window.location.replace(value);
-            }
-        },
-        get: function() {
-            return currentHref;
-        }
-    });
-    </script>
 </body>
 </html>
