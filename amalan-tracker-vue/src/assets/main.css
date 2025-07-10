@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* Force load custom colors sebagai CSS variables */
+:root {
+  --color-dusty-rose: 212 166 166;
+  --color-lavender-mist: 200 181 224;
+  --color-sage-whisper: 168 181 168;
+  --color-warm-cream: 245 243 240;
+  --color-plum-shadow: 139 107 158;
+  --color-blush-pink: 232 208 208;
+  --color-moonstone: 230 227 232;
+  --color-charcoal-soft: 74 74 82;
+}
+
+/* Fallback classes jika custom colors tidak load */
+.bg-dusty-rose { background-color: rgb(212, 166, 166) !important; }
+.text-dusty-rose { color: rgb(212, 166, 166) !important; }
+.border-dusty-rose { border-color: rgb(212, 166, 166) !important; }
+
+.bg-lavender-mist { background-color: rgb(200, 181, 224) !important; }
+.text-lavender-mist { color: rgb(200, 181, 224) !important; }
+
+.bg-warm-cream { background-color: rgb(245, 243, 240) !important; }
+.text-warm-cream { color: rgb(245, 243, 240) !important; }
+
+.bg-moonstone { background-color: rgb(230, 227, 232) !important; }
+.text-moonstone { color: rgb(230, 227, 232) !important; }
+
+.text-charcoal-soft { color: rgb(74, 74, 82) !important; }
+.bg-charcoal-soft { background-color: rgb(74, 74, 82) !important; }
+
+/* Glassmorphism dengan fallback */
+.glass {
+  background: rgba(230, 227, 232, 0.25) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.glass-dark {
+  background: rgba(139, 107, 158, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Fix contrast untuk week selector */
+.week-option.active {
+  background: rgb(212, 166, 166) !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.week-option:not(.active) {
+  background: rgba(230, 227, 232, 0.5) !important;
+  color: rgb(74, 74, 82) !important;
+}
+
+.week-option:not(.active):hover {
+  background: rgba(230, 227, 232, 0.8) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(245, 243, 240);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(212, 166, 166);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(200, 181, 224);
+}
