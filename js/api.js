@@ -53,8 +53,13 @@ class AmalanAPI {
         }
 
         return new Promise((resolve, reject) => {
-            // Create unique callback name
-            const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            // Create unique callback name with more randomness
+            const callbackName = 'jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+            
+            // Ensure callback name is unique
+            while (window[callbackName]) {
+                callbackName += '_' + Math.floor(Math.random() * 100);
+            }
             
             // Add callback parameter
             url.searchParams.set('callback', callbackName);
@@ -65,16 +70,35 @@ class AmalanAPI {
                 reject(new Error('Request timeout'));
             }, API_CONFIG.TIMEOUT);
             
+            // Cleanup function
+            function cleanup() {
+                clearTimeout(timeoutId);
+                if (window[callbackName]) {
+                    try {
+                        delete window[callbackName];
+                    } catch (e) {
+                        window[callbackName] = undefined;
+                    }
+                }
+                if (script && script.parentNode) {
+                    try {
+                        script.parentNode.removeChild(script);
+                    } catch (e) {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+            
             // Create global callback function
             window[callbackName] = function(response) {
+                console.log('📨 JSONP Response received:', response);
+                
                 cleanup();
                 
                 try {
-                    console.log('📨 JSONP Response:', response);
-                    
                     // Check if response has error
-                    if (!response.success) {
-                        reject(new Error(response.error || 'Request failed'));
+                    if (!response || !response.success) {
+                        reject(new Error(response?.error || 'Request failed'));
                         return;
                     }
                     
@@ -86,29 +110,33 @@ class AmalanAPI {
                 }
             };
             
-            // Cleanup function
-            function cleanup() {
-                clearTimeout(timeoutId);
-                if (window[callbackName]) {
-                    delete window[callbackName];
-                }
-                if (script && script.parentNode) {
-                    script.parentNode.removeChild(script);
-                }
-            }
-            
             // Create script tag for JSONP
             const script = document.createElement('script');
-            script.src = url.toString();
-            script.onerror = function() {
+            script.async = true;
+            script.defer = true;
+            
+            // Better error handling
+            script.onerror = function(e) {
+                console.error('❌ Script loading error:', e);
                 cleanup();
                 reject(new Error('Failed to load script'));
             };
             
+            script.onload = function() {
+                console.log('📡 Script loaded successfully');
+                // Don't cleanup here, let the callback handle it
+            };
+            
+            script.src = url.toString();
             console.log('📡 JSONP Request:', script.src);
             
             // Add script to DOM
-            document.head.appendChild(script);
+            try {
+                document.head.appendChild(script);
+            } catch (e) {
+                cleanup();
+                reject(new Error('Failed to add script to DOM: ' + e.message));
+            }
         });
     }
 
