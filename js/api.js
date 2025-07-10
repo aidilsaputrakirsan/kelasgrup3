@@ -2,7 +2,7 @@
 
 // Configuration
 const API_CONFIG = {
-    // URL deployment Google Apps Script Anda (pastikan ini URL yang terbaru)
+    // URL deployment Google Apps Script terbaru
     BASE_URL: 'https://script.google.com/macros/s/AKfycbxoPA7qwGjlwz5-o3BpsZ6m3D5o2qCdpyyLafJaljrh5b9djCp96m34P__6ioSg81fy/exec',
     TIMEOUT: 30000, // 30 seconds
     RETRY_COUNT: 3,
