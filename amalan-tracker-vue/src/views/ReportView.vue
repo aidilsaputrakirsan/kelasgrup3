@@ -1,7 +1,7 @@
-<!-- 📄 src/views/ReportView.vue - FIXED WITH REAL DATA FROM GAS -->
+<!-- 📄 src/views/ReportView.vue - FINAL FIXED VERSION -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
-    <!-- Header sama seperti sebelumnya -->
+    <!-- Header -->
     <header class="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40 shadow-sm">
       <div class="max-w-md mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
@@ -47,7 +47,6 @@
         </h3>
         
         <div class="space-y-4">
-          <!-- Month Selector -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Bulan</label>
             <select
@@ -61,7 +60,6 @@
             </select>
           </div>
           
-          <!-- Year Selector -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
             <select
@@ -77,7 +75,7 @@
         </div>
       </div>
       
-      <!-- Summary Cards - REAL DATA -->
+      <!-- Summary Cards -->
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl p-6 text-white text-center shadow-xl">
           <div class="text-3xl font-bold mb-1">{{ reportStats.totalAmalan }}</div>
@@ -92,31 +90,62 @@
         </div>
       </div>
       
-      <!-- Top Performers - REAL DATA -->
+      <!-- Export Section - FIXED -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span>🏆</span> Anggota Teraktif
+          <span>📤</span> Export Data
         </h3>
         
         <div class="space-y-3">
+          <div class="text-sm text-gray-600 mb-4">
+            Export laporan dalam format Excel
+          </div>
+          
+          <AppButton
+            variant="primary"
+            class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+            :loading="isExporting"
+            @click="exportToExcel"
+          >
+            <template #icon>
+              <span class="text-lg">📊</span>
+            </template>
+            Export ke Excel
+          </AppButton>
+          
+          <div class="text-xs text-gray-500">
+            📋 Format: Tabel 4 nama × 11 amalan
+          </div>
+        </div>
+      </div>
+      
+      <!-- Top Performers - FIXED LOGIC -->
+      <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="font-bold text-gray-800 flex items-center gap-2">
+            <span>🏆</span> Anggota Terkonsisten
+          </h3>
+          <div class="text-xs text-gray-500 text-right max-w-[180px]">
+            Berdasarkan berapa jenis amalan yang rutin dilakukan
+          </div>
+        </div>
+        
+        <div class="space-y-3">
           <div
-            v-for="(member, index) in topPerformers"
+            v-for="(member, index) in topConsistentMembers"
             :key="member.name"
             class="flex items-center gap-4 p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20"
           >
-            <!-- Rank Badge -->
             <div :class="getRankClasses(index)" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
               {{ index + 1 }}
             </div>
             
-            <!-- Member Info -->
             <div class="flex-1">
               <div class="font-bold text-gray-800">{{ member.name }}</div>
-              <div class="text-sm text-gray-600">{{ member.totalAmalan }} amalan dicatat</div>
+              <div class="text-sm text-gray-600">{{ member.activeTypes }}/{{ DEFAULT_AMALAN.length }} jenis amalan aktif</div>
               <div class="text-xs text-gray-500">Konsistensi: {{ member.consistency }}%</div>
             </div>
             
-            <!-- Progress Bar -->
             <div class="w-20">
               <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                 <div 
@@ -129,13 +158,26 @@
             </div>
           </div>
         </div>
+        
+        <!-- Info Box -->
+        <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div class="text-xs text-blue-700">
+            <strong>💡 Cara Hitung:</strong> Dilihat dari berapa banyak jenis amalan yang dilakukan (bukan total angka). 
+            Contoh: Yang melakukan 8 jenis amalan berbeda lebih konsisten daripada yang cuma fokus 3 jenis tapi total tinggi.
+          </div>
+        </div>
       </div>
       
-      <!-- Member Details - REAL DATA -->
+      <!-- Member Details - IMPROVED LOGIC -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
-        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span>👥</span> Detail per Anggota
-        </h3>
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="font-bold text-gray-800 flex items-center gap-2">
+            <span>👥</span> Detail per Anggota
+          </h3>
+          <div class="text-xs text-gray-500 text-right max-w-[150px]">
+            Amalan terrutin = yang paling sering dilakukan
+          </div>
+        </div>
         
         <div class="space-y-4">
           <div
@@ -151,51 +193,27 @@
                 <h4 class="font-bold text-gray-800">{{ member }}</h4>
               </div>
               <div class="text-right">
-                <div class="text-xl font-bold text-pink-600">{{ getMemberStats(member).totalAmalan }}</div>
-                <div class="text-xs text-gray-500">total amalan</div>
+                <div class="text-xl font-bold text-pink-600">{{ getMemberActiveTypes(member) }}/{{ DEFAULT_AMALAN.length }}</div>
+                <div class="text-xs text-gray-500">jenis amalan</div>
               </div>
             </div>
             
-            <!-- Top Amalan atau Amalan Terfavorit -->
             <div class="space-y-2">
-              <div class="text-xs text-gray-600 font-medium">Amalan Terfavorit:</div>
+              <div class="text-xs text-gray-600 font-medium">Amalan Terrutin:</div>
               <div class="flex justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
-                <span class="text-gray-700">{{ getMemberStats(member).topAmalan || 'Belum ada data' }}</span>
-                <span class="font-medium text-gray-600">Konsistensi: {{ getMemberStats(member).consistency }}%</span>
+                <span class="text-gray-700">{{ getMemberTopRoutine(member).name }}</span>
+                <span class="font-medium text-gray-600">{{ getMemberTopRoutine(member).frequency }}</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Export Actions -->
-      <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
-        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span>📤</span> Ekspor & Bagikan
-        </h3>
         
-        <div class="space-y-3">
-          <AppButton
-            variant="primary"
-            class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-            @click="exportReport"
-          >
-            <template #icon>
-              <span class="text-lg">📄</span>
-            </template>
-            Ekspor ke CSV
-          </AppButton>
-          
-          <AppButton
-            variant="outline"
-            class="w-full bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-blue-200"
-            @click="shareReport"
-          >
-            <template #icon>
-              <span class="text-lg">📤</span>
-            </template>
-            Bagikan Laporan
-          </AppButton>
+        <!-- Info Box -->
+        <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+          <div class="text-xs text-green-700">
+            <strong>💡 Penjelasan:</strong> "Amalan Terrutin" dihitung dari frekuensi relatif per jenis amalan. 
+            Contoh: Shalat 25x lebih rutin daripada Istighfar 100x (karena target Shalat 35x vs Istighfar 700x per pekan).
+          </div>
         </div>
       </div>
       
@@ -212,13 +230,13 @@
     </main>
     
     <!-- Loading -->
-    <div v-if="isLoading" class="fixed inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div v-if="isLoading || isExporting" class="fixed inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-8 text-center border border-white/20 shadow-xl">
         <div class="w-12 h-12 mx-auto bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center animate-bounce-soft mb-4">
-          <span class="text-white text-xl">📊</span>
+          <span class="text-white text-xl">{{ isExporting ? '📊' : '📊' }}</span>
         </div>
         <div class="w-8 h-8 border-3 border-pink-200 border-t-pink-500 rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-gray-700 font-medium">Memuat laporan...</p>
+        <p class="text-gray-700 font-medium">{{ isExporting ? 'Membuat file Excel...' : 'Memuat laporan...' }}</p>
       </div>
     </div>
   </div>
@@ -229,7 +247,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAmalanStore } from '@/stores/amalan'
 import { useUiStore } from '@/stores/ui'
-import { MEMBERS } from '@/utils/constants'
+import { MEMBERS, DEFAULT_AMALAN } from '@/utils/constants'
 import { getMonthName, getCurrentMonth, getCurrentYear } from '@/utils/date'
 import AppButton from '@/components/ui/AppButton.vue'
 
@@ -241,6 +259,7 @@ const uiStore = useUiStore()
 const selectedMonth = ref(getCurrentMonth())
 const selectedYear = ref(getCurrentYear())
 const isLoading = ref(false)
+const isExporting = ref(false)
 
 // Computed
 const yearRange = computed(() => {
@@ -248,7 +267,6 @@ const yearRange = computed(() => {
   return Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
 })
 
-// Real report stats dari store
 const reportStats = computed(() => {
   const reportData = amalanStore.monthlyReportData
   
@@ -267,41 +285,263 @@ const reportStats = computed(() => {
   }
 })
 
-const topPerformers = computed(() => {
+const topConsistentMembers = computed(() => {
   const reportData = amalanStore.monthlyReportData
   
-  if (!reportData || !reportData.members) {
+  if (!reportData || !reportData.amalan) {
     return []
   }
   
-  const performers = MEMBERS.map(member => {
-    const memberData = reportData.members[member] || {}
+  const members = MEMBERS.map(member => {
+    // Hitung berapa jenis amalan yang aktif (> 0)
+    let activeTypes = 0
+    let totalAmalan = 0
+    
+    Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+      const memberValue = amalanData[member] || 0
+      if (memberValue > 0) {
+        activeTypes++
+      }
+      totalAmalan += memberValue
+    })
+    
+    // Consistency percentage berdasarkan variety of amalan
+    const consistency = Math.round((activeTypes / DEFAULT_AMALAN.length) * 100)
+    
     return {
       name: member,
-      totalAmalan: memberData.totalAmalan || 0,
-      consistency: memberData.consistency || 0
+      activeTypes: activeTypes,
+      totalAmalan: totalAmalan,
+      consistency: consistency
     }
   })
   
-  // Sort by total amalan descending
-  performers.sort((a, b) => b.totalAmalan - a.totalAmalan)
+  // Sort berdasarkan active types (consistency), bukan total amalan
+  members.sort((a, b) => {
+    if (b.activeTypes === a.activeTypes) {
+      // Jika sama, baru lihat consistency percentage
+      return b.consistency - a.consistency
+    }
+    return b.activeTypes - a.activeTypes
+  })
   
-  // Calculate percentages based on highest performer
-  const maxAmalan = performers[0]?.totalAmalan || 1
+  // Calculate percentage berdasarkan TOTAL AMALAN, bukan activeTypes tertinggi
+  const totalAmalanTypes = DEFAULT_AMALAN.length // 11 amalan
   
-  return performers.map(performer => ({
-    ...performer,
-    percentage: Math.round((performer.totalAmalan / maxAmalan) * 100)
+  return members.map(member => ({
+    ...member,
+    percentage: Math.round((member.activeTypes / totalAmalanTypes) * 100)
   }))
 })
 
-// Methods
+const topPerformers = computed(() => {
+  // Keep this for backward compatibility, tapi sekarang gunakan topConsistentMembers
+  return topConsistentMembers.value
+})
+
+// 🎯 TARGET MAPPING SESUAI GAMBAR
+const amalanTargets = {
+  'Dzikir pagi/petang': '1x/hari',
+  'Tilawah': '1 juz/hari', 
+  'Shalat tepat waktu': '5x/hari',
+  'Shalat malam': '3x/pekan',
+  'Shalat Dhuha': '3x/pekan',
+  'Puasa Sunnah': '3x/pekan',
+  'Istighfar': '100x/hari',
+  'Shalawat': '100x/hari',
+  'Membaca Baqiyatush-shalihat': '10x/hari',
+  'Infaq Harian': '1x/hari',
+  'Doa kemenangan dakwah dan umat islam': '1x/hari'
+}
+
+// 📊 EXCEL EXPORT FUNCTION - FIXED & SIMPLE
+async function exportToExcel() {
+  try {
+    isExporting.value = true
+    console.log('📊 Starting Excel export...')
+    
+    const reportData = amalanStore.monthlyReportData
+    let amalanData = {}
+    let useRealData = false
+    
+    // Check for real data
+    if (reportData && reportData.amalan && Object.keys(reportData.amalan).length > 0) {
+      console.log('✅ Using real data')
+      amalanData = reportData.amalan
+      useRealData = true
+    } else {
+      console.log('⚠️ Using sample data')
+      // Create sample data with realistic values based on targets
+      DEFAULT_AMALAN.forEach(amalan => {
+        let atkVal, aysVal, ftrVal, winVal
+        
+        // Set realistic sample values based on amalan type
+        if (amalan.includes('Istighfar') || amalan.includes('Shalawat')) {
+          // High frequency amalan - 100x/hari target
+          atkVal = Math.floor(Math.random() * 200) + 50  // 50-250
+          aysVal = Math.floor(Math.random() * 200) + 50
+          ftrVal = Math.floor(Math.random() * 200) + 50
+          winVal = Math.floor(Math.random() * 200) + 50
+        } else if (amalan.includes('Shalat tepat waktu')) {
+          // 5x/hari = 35x/pekan
+          atkVal = Math.floor(Math.random() * 20) + 20   // 20-40
+          aysVal = Math.floor(Math.random() * 20) + 20
+          ftrVal = Math.floor(Math.random() * 20) + 20
+          winVal = Math.floor(Math.random() * 20) + 20
+        } else if (amalan.includes('Membaca Baqiyatush-shalihat')) {
+          // 10x/hari = 70x/pekan
+          atkVal = Math.floor(Math.random() * 30) + 40   // 40-70
+          aysVal = Math.floor(Math.random() * 30) + 40
+          ftrVal = Math.floor(Math.random() * 30) + 40
+          winVal = Math.floor(Math.random() * 30) + 40
+        } else if (amalan.includes('pekan')) {
+          // 3x/pekan target
+          atkVal = Math.floor(Math.random() * 5) + 1     // 1-6
+          aysVal = Math.floor(Math.random() * 5) + 1
+          ftrVal = Math.floor(Math.random() * 5) + 1
+          winVal = Math.floor(Math.random() * 5) + 1
+        } else {
+          // Daily amalan - 1x/hari = 7x/pekan
+          atkVal = Math.floor(Math.random() * 10) + 1    // 1-11
+          aysVal = Math.floor(Math.random() * 10) + 1
+          ftrVal = Math.floor(Math.random() * 10) + 1
+          winVal = Math.floor(Math.random() * 10) + 1
+        }
+        
+        amalanData[amalan] = {
+          'ATK': atkVal,
+          'AYS': aysVal,
+          'FTR': ftrVal,
+          'WIN': winVal,
+          total: atkVal + aysVal + ftrVal + winVal
+        }
+      })
+    }
+    
+    const monthName = getMonthName(selectedMonth.value)
+    
+    // 📋 CREATE HTML TABLE FOR EXCEL - SIMPLE & FOCUSED
+    let htmlContent = `
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        table { 
+          border-collapse: collapse; 
+          width: 100%; 
+          font-family: Arial, sans-serif; 
+          margin-bottom: 20px;
+        }
+        th, td { 
+          border: 1px solid #000; 
+          padding: 8px; 
+          text-align: center; 
+        }
+        th { 
+          background-color: #f2f2f2; 
+          font-weight: bold; 
+        }
+        .header { 
+          font-size: 18px; 
+          font-weight: bold; 
+          margin-bottom: 10px; 
+          text-align: center;
+        }
+        .info { 
+          margin-bottom: 5px; 
+          text-align: center;
+        }
+        .amalan-name {
+          text-align: left;
+          width: 300px;
+        }
+        .target-col {
+          text-align: center;
+          width: 100px;
+          background-color: #ffffcc;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">LAPORAN AMALAN HARIAN</div>
+      <div class="info">Periode: ${monthName} ${selectedYear.value}</div>
+      <div class="info">Tanggal: ${new Date().toLocaleDateString('id-ID')}</div>
+      <br>
+      
+      <table>
+        <thead>
+          <tr>
+            <th class="amalan-name">NAMA AMALAN</th>
+            <th class="target-col">TARGET</th>
+            <th>ATK</th>
+            <th>AYS</th>
+            <th>FTR</th>
+            <th>WIN</th>
+          </tr>
+        </thead>
+        <tbody>
+    `
+    
+    // Add data rows dengan target
+    DEFAULT_AMALAN.forEach(amalan => {
+      const data = amalanData[amalan] || {}
+      const target = amalanTargets[amalan] || '-'
+      
+      htmlContent += `
+        <tr>
+          <td class="amalan-name">${amalan}</td>
+          <td class="target-col">${target}</td>
+          <td>${data['ATK'] || 0}</td>
+          <td>${data['AYS'] || 0}</td>
+          <td>${data['FTR'] || 0}</td>
+          <td>${data['WIN'] || 0}</td>
+        </tr>
+      `
+    })
+    
+    htmlContent += `
+        </tbody>
+      </table>
+      
+      <br>
+      <div style="text-align: center; font-size: 12px; color: #666;">
+        ${useRealData ? 'Data: Real dari database' : 'Data: Sample untuk testing'}<br>
+        Target menunjukkan frekuensi ideal per amalan
+      </div>
+    </body>
+    </html>
+    `
+    
+    // 💾 CREATE DOWNLOADABLE FILE
+    const blob = new Blob([htmlContent], { 
+      type: 'application/vnd.ms-excel;charset=utf-8;' 
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `Laporan_${monthName}${selectedYear.value}.xls`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    
+    console.log('✅ Excel export completed successfully')
+    uiStore.showToast('Berhasil export ke Excel!', 'success')
+    
+  } catch (error) {
+    console.error('❌ Export error:', error)
+    uiStore.showToast('Gagal export data', 'error')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+// Other methods
 async function loadReportData() {
   try {
     isLoading.value = true
     console.log('📊 Loading report data for:', selectedMonth.value, selectedYear.value)
     
-    // Gunakan store method untuk load monthly report
     await amalanStore.loadMonthlyReport(selectedMonth.value, selectedYear.value)
     
     uiStore.showToast('Laporan berhasil dimuat', 'success')
@@ -310,6 +550,70 @@ async function loadReportData() {
     uiStore.showToast('Gagal memuat data laporan', 'error')
   } finally {
     isLoading.value = false
+  }
+}
+
+// 🎯 TARGET NUMBERS PER WEEK untuk perhitungan relatif
+const amalanWeeklyTargets = {
+  'Dzikir pagi/petang': 7,          // 1x/hari = 7x/week
+  'Tilawah': 7,                     // 1 juz/hari = 7x/week
+  'Shalat tepat waktu': 35,         // 5x/hari = 35x/week
+  'Shalat malam': 3,                // 3x/pekan
+  'Shalat Dhuha': 3,                // 3x/pekan
+  'Puasa Sunnah': 3,                // 3x/pekan
+  'Istighfar': 700,                 // 100x/hari = 700x/week
+  'Shalawat': 700,                  // 100x/hari = 700x/week
+  'Membaca Baqiyatush-shalihat': 70, // 10x/hari = 70x/week
+  'Infaq Harian': 7,                // 1x/hari = 7x/week
+  'Doa kemenangan dakwah dan umat islam': 7 // 1x/hari = 7x/week
+}
+
+function getMemberActiveTypes(member) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan) {
+    return 0
+  }
+  
+  let activeTypes = 0
+  Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    const memberValue = amalanData[member] || 0
+    if (memberValue > 0) {
+      activeTypes++
+    }
+  })
+  
+  return activeTypes
+}
+
+function getMemberTopRoutine(member) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan) {
+    return { name: 'Belum ada data', frequency: '0%' }
+  }
+  
+  let topAmalan = 'Belum ada data'
+  let maxPercentage = 0
+  
+  Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    const memberValue = amalanData[member] || 0
+    const weeklyTarget = amalanWeeklyTargets[amalanName] || 1
+    
+    // Hitung percentage achievement relative to target
+    const percentage = (memberValue / weeklyTarget) * 100
+    
+    if (percentage > maxPercentage && memberValue > 0) {
+      maxPercentage = percentage
+      topAmalan = amalanName
+    }
+  })
+  
+  const displayPercentage = maxPercentage > 0 ? `${Math.round(maxPercentage)}%` : '0%'
+  
+  return {
+    name: topAmalan,
+    frequency: displayPercentage
   }
 }
 
@@ -329,10 +633,10 @@ function getMemberStats(member) {
 
 function getRankClasses(index) {
   const classes = [
-    'bg-gradient-to-r from-yellow-400 to-orange-500', // Gold
-    'bg-gradient-to-r from-gray-400 to-gray-500',     // Silver
-    'bg-gradient-to-r from-orange-400 to-orange-500', // Bronze
-    'bg-gradient-to-r from-blue-400 to-blue-500'      // Others
+    'bg-gradient-to-r from-yellow-400 to-orange-500',
+    'bg-gradient-to-r from-gray-400 to-gray-500',
+    'bg-gradient-to-r from-orange-400 to-orange-500',
+    'bg-gradient-to-r from-blue-400 to-blue-500'
   ]
   return classes[index] || classes[3]
 }
@@ -347,69 +651,6 @@ function getProgressColor(index) {
   return colors[index] || colors[3]
 }
 
-function exportReport() {
-  try {
-    const reportData = amalanStore.monthlyReportData
-    if (!reportData) {
-      uiStore.showToast('Tidak ada data untuk diekspor', 'error')
-      return
-    }
-    
-    let csvContent = `Anggota,Total Amalan,Amalan Terfavorit,Konsistensi\n`
-    
-    MEMBERS.forEach(member => {
-      const stats = getMemberStats(member)
-      csvContent += `${member},${stats.totalAmalan},${stats.topAmalan},${stats.consistency}%\n`
-    })
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    
-    link.setAttribute('href', url)
-    link.setAttribute('download', `laporan-amalan-${getMonthName(selectedMonth.value)}-${selectedYear.value}.csv`)
-    link.style.visibility = 'hidden'
-    
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    uiStore.showToast('Laporan berhasil diekspor', 'success')
-  } catch (error) {
-    console.error('Export error:', error)
-    uiStore.showToast('Gagal mengekspor laporan', 'error')
-  }
-}
-
-async function shareReport() {
-  const shareText = `📊 Laporan Amalan ${getMonthName(selectedMonth.value)} ${selectedYear.value}\n\n` +
-    `Total Amalan: ${reportStats.value.totalAmalan}\n` +
-    `Rata-rata per Anggota: ${reportStats.value.averagePerMember}\n\n` +
-    `🏆 Anggota Teraktif: ${topPerformers.value[0]?.name || '-'}\n\n` +
-    `Alhamdulillahi rabbil alameen 🤲`
-  
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Laporan Amalan Harian',
-        text: shareText
-      })
-      uiStore.showToast('Laporan berhasil dibagikan', 'success')
-    } catch (error) {
-      // User cancelled sharing
-    }
-  } else {
-    // Fallback: copy to clipboard
-    try {
-      await navigator.clipboard.writeText(shareText)
-      uiStore.showToast('Laporan disalin ke clipboard', 'success')
-    } catch (error) {
-      uiStore.showToast('Gagal menyalin laporan', 'error')
-    }
-  }
-}
-
-// Lifecycle
 onMounted(async () => {
   await loadReportData()
 })
