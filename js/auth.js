@@ -308,8 +308,13 @@ function setupLoginForm() {
             const result = await login(username, password, rememberMe);
             
             if (result.success) {
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
+                // TAMBAHKAN: Hide loading secara eksplisit sebelum redirect
+                UIUtils.hideLoading();
+                
+                // Tunggu sebentar untuk memastikan loading hilang
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 100);
             }
         } finally {
             UIUtils.setButtonLoading(submitButton, false);
