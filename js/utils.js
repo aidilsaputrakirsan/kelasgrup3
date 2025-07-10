@@ -370,8 +370,24 @@ const ValidationUtils = {
     }
 };
 
+
 // URL utilities
 const URLUtils = {
+    /**
+     * Get base path untuk aplikasi
+     */
+    getBasePath() {
+        const path = window.location.pathname;
+        
+        // Untuk GitHub Pages: /kelasgrup3/
+        if (path.includes('/kelasgrup3/')) {
+            return '/kelasgrup3/';
+        }
+        
+        // Untuk localhost dan domain custom
+        return '/';
+    },
+
     /**
      * Get URL parameter
      */
@@ -399,14 +415,38 @@ const URLUtils = {
     },
 
     /**
-     * Navigate to page with parameters
+     * Navigate to page with parameters - FIXED untuk GitHub Pages
      */
     navigateTo(page, params = {}) {
-        const url = new URL(page, window.location.origin);
+        // Dapatkan base path
+        const basePath = this.getBasePath();
+        
+        // Buat URL lengkap dengan base path
+        const fullPath = basePath + page;
+        const url = new URL(fullPath, window.location.origin);
+        
+        // Tambahkan parameters
         Object.keys(params).forEach(key => {
             url.searchParams.set(key, params[key]);
         });
+        
+        console.log('🚀 Navigating to:', url.toString());
         window.location.href = url.toString();
+    },
+
+    /**
+     * Get current page name dari URL
+     */
+    getCurrentPageName() {
+        const path = window.location.pathname;
+        const filename = path.split('/').pop();
+        
+        if (filename === 'dashboard.html') return 'dashboard';
+        if (filename === 'detail.html') return 'detail';
+        if (filename === 'report.html') return 'report';
+        if (filename === 'index.html' || filename === '') return 'login';
+        
+        return 'unknown';
     }
 };
 
