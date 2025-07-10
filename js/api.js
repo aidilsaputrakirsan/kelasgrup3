@@ -2,8 +2,8 @@
 
 // Configuration
 const API_CONFIG = {
-    // Replace with your Google Apps Script URL
-    BASE_URL: 'https://script.google.com/macros/s/AKfycbwmXiUVBrsX-Ikx2y-G9hK3GcqrgeBuuNItmClWZ2AshUAJRtBokABk5z4Wyn9ZRcy9/exec',
+    // GANTI URL INI dengan URL deployment Google Apps Script Anda
+    BASE_URL: 'https://script.google.com/macros/s/AKfycbx4nPT2XMl5Mj_xoU-Bw9rD0d8QJZh-ohFj8Zn7Be8GhhGJddzNy82Bh2dV4EL2h7bY/exec',
     TIMEOUT: 30000, // 30 seconds
     RETRY_COUNT: 3,
     RETRY_DELAY: 1000 // 1 second
@@ -41,7 +41,7 @@ class AmalanAPI {
     }
 
     /**
-     * Perform actual HTTP request
+     * Perform actual HTTP request using JSONP for CORS bypass
      */
     async _performRequest(endpoint, data, method) {
         const url = new URL(API_CONFIG.BASE_URL);
@@ -52,49 +52,60 @@ class AmalanAPI {
             url.searchParams.set('data', JSON.stringify(data));
         }
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
-
-        try {
-            const response = await fetch(url.toString(), {
-                method: 'GET', // Always use GET for Google Apps Script
-                signal: controller.signal,
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+        return new Promise((resolve, reject) => {
+            // Create unique callback name
+            const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Add callback parameter
+            url.searchParams.set('callback', callbackName);
+            
+            // Create timeout
+            const timeoutId = setTimeout(() => {
+                cleanup();
+                reject(new Error('Request timeout'));
+            }, API_CONFIG.TIMEOUT);
+            
+            // Create global callback function
+            window[callbackName] = function(response) {
+                cleanup();
+                
+                try {
+                    // Check if response has error
+                    if (!response.success) {
+                        reject(new Error(response.error || 'Request failed'));
+                        return;
+                    }
+                    
+                    // Return the data part of response
+                    resolve(response.data || response);
+                    
+                } catch (error) {
+                    reject(new Error('Invalid server response: ' + error.message));
                 }
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const result = await response.json();
+            };
             
-            // Check if response has error
-            if (!result.success) {
-                throw new Error(result.error || 'Request failed');
-            }
-
-            // Return the data part of response
-            return result.data || result;
-            
-        } catch (error) {
-            clearTimeout(timeoutId);
-            
-            if (error.name === 'AbortError') {
-                throw new Error('Request timeout');
+            // Cleanup function
+            function cleanup() {
+                clearTimeout(timeoutId);
+                if (window[callbackName]) {
+                    delete window[callbackName];
+                }
+                if (script && script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
             }
             
-            // Handle JSON parsing errors
-            if (error.name === 'SyntaxError') {
-                throw new Error('Invalid server response');
-            }
+            // Create script tag for JSONP
+            const script = document.createElement('script');
+            script.src = url.toString();
+            script.onerror = function() {
+                cleanup();
+                reject(new Error('Failed to load script'));
+            };
             
-            throw error;
-        }
+            // Add script to DOM
+            document.head.appendChild(script);
+        });
     }
 
     /**
