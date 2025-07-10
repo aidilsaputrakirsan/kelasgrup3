@@ -3,7 +3,7 @@
 // Configuration
 const API_CONFIG = {
     // URL deployment Google Apps Script terbaru
-    BASE_URL: 'https://script.google.com/macros/s/AKfycbwL0Y1N9qNvhQtzSOhw3dAtVbKT69A5Eq2-UTdMYFkeb96-sGOeoIih8ibgjTDMB0Kz/exec',
+    BASE_URL: 'https://script.google.com/macros/s/AKfycbzGAvCi6chszYzYghXkSMngFBf4gtqUj0SELO_jWWuSFKpehiZ_FLu4h_BT2i0G92FW/exec',
     TIMEOUT: 30000, // 30 seconds
     RETRY_COUNT: 3,
     RETRY_DELAY: 1000 // 1 second
