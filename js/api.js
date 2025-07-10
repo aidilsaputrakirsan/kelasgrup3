@@ -2,8 +2,8 @@
 
 // Configuration
 const API_CONFIG = {
-    // GANTI URL INI dengan URL deployment Google Apps Script Anda
-    BASE_URL: 'https://script.google.com/macros/s/AKfycbx4nPT2XMl5Mj_xoU-Bw9rD0d8QJZh-ohFj8Zn7Be8GhhGJddzNy82Bh2dV4EL2h7bY/exec',
+    // URL deployment Google Apps Script Anda (pastikan ini URL yang terbaru)
+    BASE_URL: 'https://script.google.com/macros/s/AKfycbxoPA7qwGjlwz5-o3BpsZ6m3D5o2qCdpyyLafJaljrh5b9djCp96m34P__6ioSg81fy/exec',
     TIMEOUT: 30000, // 30 seconds
     RETRY_COUNT: 3,
     RETRY_DELAY: 1000 // 1 second
@@ -70,6 +70,8 @@ class AmalanAPI {
                 cleanup();
                 
                 try {
+                    console.log('📨 JSONP Response:', response);
+                    
                     // Check if response has error
                     if (!response.success) {
                         reject(new Error(response.error || 'Request failed'));
@@ -102,6 +104,8 @@ class AmalanAPI {
                 cleanup();
                 reject(new Error('Failed to load script'));
             };
+            
+            console.log('📡 JSONP Request:', script.src);
             
             // Add script to DOM
             document.head.appendChild(script);
@@ -188,10 +192,14 @@ class AmalanAPI {
      */
     async authenticate(username, password) {
         try {
+            console.log('🔐 Authenticating user:', username);
+            
             const response = await this.makeRequest('auth', {
                 username: username.trim(),
                 password: password.trim()
             });
+
+            console.log('🔐 Auth response:', response);
 
             // Response is already the data part from server
             if (response && response.success) {
@@ -424,11 +432,15 @@ class AmalanAPI {
 
             const results = await Promise.all(promises);
             
-            UIUtils.showToast('Data berhasil disinkronkan', 'success');
+            if (typeof UIUtils !== 'undefined' && UIUtils.showToast) {
+                UIUtils.showToast('Data berhasil disinkronkan', 'success');
+            }
             return { success: true, data: results };
         } catch (error) {
             console.error('Sync data error:', error);
-            UIUtils.showToast('Gagal sinkronisasi data', 'error');
+            if (typeof UIUtils !== 'undefined' && UIUtils.showToast) {
+                UIUtils.showToast('Gagal sinkronisasi data', 'error');
+            }
             throw error;
         }
     }
@@ -451,7 +463,9 @@ class AmalanAPI {
      */
     clearCache() {
         this.cache.clear();
-        UIUtils.showToast('Cache berhasil dibersihkan', 'success');
+        if (typeof UIUtils !== 'undefined' && UIUtils.showToast) {
+            UIUtils.showToast('Cache berhasil dibersihkan', 'success');
+        }
     }
 }
 
@@ -464,11 +478,15 @@ window.api = api;
 
 // Connection status monitoring
 window.addEventListener('online', () => {
-    UIUtils.showToast('Koneksi tersambung kembali', 'success');
+    if (typeof UIUtils !== 'undefined' && UIUtils.showToast) {
+        UIUtils.showToast('Koneksi tersambung kembali', 'success');
+    }
 });
 
 window.addEventListener('offline', () => {
-    UIUtils.showToast('Koneksi terputus', 'warning');
+    if (typeof UIUtils !== 'undefined' && UIUtils.showToast) {
+        UIUtils.showToast('Koneksi terputus', 'warning');
+    }
 });
 
 // Export configuration for settings page
