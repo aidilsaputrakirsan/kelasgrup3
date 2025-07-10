@@ -326,14 +326,13 @@ class AmalanAPI {
                 timestamp: DateUtils.getCurrentDate()
             });
 
-            // Clear related cache
-            const cacheKey = this._getCacheKey('weekly_data', { 
-                member, 
-                week: currentWeek, 
-                month: currentMonth, 
-                year: currentYear 
-            });
-            this.cache.delete(cacheKey);
+            // ✅ Clear cache untuk semua weeks di bulan ini (bukan hanya week yang diupdate)
+            for (let w = 1; w <= 4; w++) {
+                const cacheKey = `dashboard_stats_${w}_${currentMonth}_${currentYear}`;
+                this.cache.delete(cacheKey);
+            }
+            
+            // Clear old cache key juga
             this.cache.delete('dashboard_stats');
 
             return response;
@@ -375,23 +374,27 @@ class AmalanAPI {
     /**
      * Get dashboard statistics
      */
-    async getDashboardStats() {
-        const cacheKey = 'dashboard_stats';
-        const cached = this._getFromCache(cacheKey, 180000); // 3 minutes cache
+    async getDashboardStats(week = null, month = null, year = null) {
+        // Gunakan parameter yang dikirim, atau fallback ke current date
+        const targetWeek = week || DateUtils.getCurrentWeek();
+        const targetMonth = month || DateUtils.getCurrentMonth();
+        const targetYear = year || DateUtils.getCurrentYear();
+        
+        // Cache key harus include week/month/year agar tidak bentrok
+        const cacheKey = `dashboard_stats_${targetWeek}_${targetMonth}_${targetYear}`;
+        const cached = this._getFromCache(cacheKey, 180000);
         
         if (cached) {
             return cached;
         }
 
         try {
-            const currentWeek = DateUtils.getCurrentWeek();
-            const currentMonth = DateUtils.getCurrentMonth();
-            const currentYear = DateUtils.getCurrentYear();
-
+            console.log(`📊 Getting dashboard stats for Week ${targetWeek}, Month ${targetMonth}, Year ${targetYear}`);
+            
             const response = await this.makeRequest('getDashboardStats', {
-                week: currentWeek,
-                month: currentMonth,
-                year: currentYear
+                week: targetWeek,      // ✅ Gunakan week yang dipilih user
+                month: targetMonth,
+                year: targetYear
             });
 
             this._setCache(cacheKey, response);
@@ -444,17 +447,17 @@ class AmalanAPI {
      */
     async syncData() {
         try {
-            // Clear all cache
+            // ✅ Clear ALL cache (termasuk semua week variants)
             this.cache.clear();
             
-            // Get fresh data
-            const currentWeek = DateUtils.getCurrentWeek();
-            const currentMonth = DateUtils.getCurrentMonth();
-            const currentYear = DateUtils.getCurrentYear();
+            // Get fresh data untuk week yang sedang aktif
+            const currentWeek = AppState.currentWeek || DateUtils.getCurrentWeek();
+            const currentMonth = AppState.currentMonth || DateUtils.getCurrentMonth();
+            const currentYear = AppState.currentYear || DateUtils.getCurrentYear();
 
             const promises = [
                 this.getCurrentWeek(),
-                this.getDashboardStats(),
+                this.getDashboardStats(currentWeek, currentMonth, currentYear),
                 this.getAmalanList()
             ];
 

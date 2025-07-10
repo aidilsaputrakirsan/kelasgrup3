@@ -222,6 +222,8 @@ function setupWeekSelector() {
  * Handle week change
  */
 async function handleWeekChange(week) {
+    console.log(`🗓️ Changing week from ${AppState.currentWeek} to ${week}`);
+    
     AppState.currentWeek = week;
     
     // Update active week button
@@ -229,8 +231,10 @@ async function handleWeekChange(week) {
         btn.classList.toggle('active', btn.dataset.week == week);
     });
     
-    // Reload dashboard data
+    // ✅ Reload dashboard data dengan week yang baru
     await loadDashboardData();
+    
+    console.log(`✅ Week changed to ${week}, dashboard data reloaded`);
 }
 
 /**
@@ -240,7 +244,15 @@ async function loadDashboardData() {
     try {
         setLoading(true);
         
-        const stats = await api.getDashboardStats();
+        console.log(`📊 Loading dashboard data for Week ${AppState.currentWeek}, Month ${AppState.currentMonth}, Year ${AppState.currentYear}`);
+        
+        // ✅ Kirim week/month/year yang dipilih user, bukan current date
+        const stats = await api.getDashboardStats(
+            AppState.currentWeek,   // Week yang dipilih di dashboard
+            AppState.currentMonth,  // Month yang dipilih
+            AppState.currentYear    // Year yang dipilih
+        );
+        
         AppState.dashboardData = stats;
         
         renderDashboard();
