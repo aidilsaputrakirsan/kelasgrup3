@@ -1,0 +1,102 @@
+{
+  "name": "Tracking Amalan Harian",
+  "short_name": "Amalan Tracker",
+  "description": "Aplikasi tracking amalan harian untuk ATK, AYS, FTR, WIN dengan tema Islamic",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f2937",
+  "theme_color": "#ec4899",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "id",
+  "dir": "ltr",
+  "categories": ["productivity", "lifestyle", "education"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 144 144'><rect width='144' height='144' fill='%23ec4899' rx='24'/><text x='72' y='90' font-size='72' text-anchor='middle' fill='white'>📿</text></svg>",
+      "sizes": "144x144",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23ec4899' rx='32'/><text x='96' y='120' font-size='96' text-anchor='middle' fill='white'>📿</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23ec4899' rx='64'/><text x='256' y='320' font-size='256' text-anchor='middle' fill='white'>📿</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'><rect width='390' height='844' fill='%231f2937'/><rect x='20' y='60' width='350' height='80' fill='%23374151' rx='12'/><text x='195' y='110' font-size='24' text-anchor='middle' fill='%23ec4899'>📿 Amalan Tracker</text><rect x='20' y='160' width='170' height='120' fill='%23374151' rx='12'/><text x='105' y='190' font-size='16' text-anchor='middle' fill='%23f9fafb'>ATK</text><text x='105' y='210' font-size='14' text-anchor='middle' fill='%23d1d5db'>Progress: 85%</text><rect x='200' y='160' width='170' height='120' fill='%23374151' rx='12'/><text x='285' y='190' font-size='16' text-anchor='middle' fill='%23f9fafb'>AYS</text><text x='285' y='210' font-size='14' text-anchor='middle' fill='%23d1d5db'>Progress: 92%</text><rect x='20' y='300' width='170' height='120' fill='%23374151' rx='12'/><text x='105' y='330' font-size='16' text-anchor='middle' fill='%23f9fafb'>FTR</text><text x='105' y='350' font-size='14' text-anchor='middle' fill='%23d1d5db'>Progress: 78%</text><rect x='200' y='300' width='170' height='120' fill='%23374151' rx='12'/><text x='285' y='330' font-size='16' text-anchor='middle' fill='%23f9fafb'>WIN</text><text x='285' y='350' font-size='14' text-anchor='middle' fill='%23d1d5db'>Progress: 88%</text></svg>",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Dashboard utama dengan kartu anggota"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Lihat ringkasan amalan semua anggota",
+      "url": "/dashboard.html",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%23ec4899' rx='16'/><text x='48' y='60' font-size='48' text-anchor='middle' fill='white'>📊</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Input Amalan ATK",
+      "short_name": "ATK",
+      "description": "Input amalan untuk ATK",
+      "url": "/detail.html?member=ATK",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%23ec4899' rx='16'/><text x='48' y='60' font-size='24' text-anchor='middle' fill='white'>ATK</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Input Amalan AYS",
+      "short_name": "AYS",
+      "description": "Input amalan untuk AYS",
+      "url": "/detail.html?member=AYS",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%23ec4899' rx='16'/><text x='48' y='60' font-size='24' text-anchor='middle' fill='white'>AYS</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Laporan Bulanan",
+      "short_name": "Laporan",
+      "description": "Lihat laporan dan analisis bulanan",
+      "url": "/report.html",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%23ec4899' rx='16'/><text x='48' y='60' font-size='48' text-anchor='middle' fill='white'>📈</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "protocol_handlers": [],
+  "file_handlers": []
+}
