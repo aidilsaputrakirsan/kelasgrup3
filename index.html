@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Amalan Harian - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="islamic-greeting">
+            <h1>بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</h1>
+            <p>Assalamu'alaikum Warahmatullahi Wabarakatuh</p>
+        </div>
+        
+        <div class="login-card">
+            <div class="card-header">
+                <h2>📿 Tracking Amalan Harian</h2>
+                <p>Silakan masuk untuk melanjutkan</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Masukkan username">
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Masukkan password">
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rememberMe" name="rememberMe">
+                    <label for="rememberMe">Ingat saya</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Masuk</span>
+                    <div class="loading-spinner" style="display: none;"></div>
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Multi-device access tersedia</p>
+                <small>ATK • AYS • FTR • WIN</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Sedang memverifikasi...</p>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Initialize login page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already logged in
+            if (isLoggedIn()) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            // Setup login form
+            setupLoginForm();
+            
+            // Load saved username if "remember me" was checked
+            loadSavedCredentials();
+        });
+    </script>
+</body>
+</html>
