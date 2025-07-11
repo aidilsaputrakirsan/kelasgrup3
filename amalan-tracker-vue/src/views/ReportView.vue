@@ -90,7 +90,64 @@
         </div>
       </div>
       
-      <!-- Export Section - FIXED -->
+      <!-- Tabel Data Amalan - SEPERTI EXCEL -->
+      <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
+        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span>📋</span> Tabel Data Amalan
+        </h3>
+        
+        <!-- Responsive table wrapper -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold">Nama Amalan</th>
+                <th class="border border-gray-300 px-2 py-2 text-center font-semibold bg-yellow-100 text-gray-800">Target</th>
+                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">ATK</th>
+                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">AYS</th>
+                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">FTR</th>
+                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">WIN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(amalan, index) in DEFAULT_AMALAN"
+                :key="amalan"
+                :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
+              >
+                <td class="border border-gray-300 px-3 py-2 text-gray-800 font-medium">
+                  {{ amalan }}
+                </td>
+                <td class="border border-gray-300 px-2 py-2 text-center text-xs bg-yellow-50 text-gray-700 font-medium">
+                  {{ amalanTargets[amalan] || '-' }}
+                </td>
+                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'ATK'))">
+                  {{ getAmalanValue(amalan, 'ATK') }}
+                </td>
+                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'AYS'))">
+                  {{ getAmalanValue(amalan, 'AYS') }}
+                </td>
+                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'FTR'))">
+                  {{ getAmalanValue(amalan, 'FTR') }}
+                </td>
+                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'WIN'))">
+                  {{ getAmalanValue(amalan, 'WIN') }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Info note -->
+        <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+          <div class="text-xs text-amber-700">
+            <strong>📋 Keterangan:</strong> Tabel ini menampilkan data yang sama dengan Excel export. 
+            Warna hijau = ada progress, abu-abu = belum ada data.
+          </div>
+        </div>
+      </div>
+
+      <!-- Export Section - UPDATED ke .xlsx -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span>📤</span> Export Data
@@ -98,7 +155,7 @@
         
         <div class="space-y-3">
           <div class="text-sm text-gray-600 mb-4">
-            Export laporan dalam format Excel
+            Export laporan
           </div>
           
           <AppButton
@@ -110,13 +167,10 @@
             <template #icon>
               <span class="text-lg">📊</span>
             </template>
-            Export ke Excel
+            Export ke Excel (.xlsx)
           </AppButton>
           
-          <div class="text-xs text-gray-500">
-            📋 Format: Tabel 4 nama × 11 amalan
           </div>
-        </div>
       </div>
       
       <!-- Top Performers - FIXED LOGIC -->
@@ -250,6 +304,9 @@ import { useUiStore } from '@/stores/ui'
 import { MEMBERS, DEFAULT_AMALAN } from '@/utils/constants'
 import { getMonthName, getCurrentMonth, getCurrentYear } from '@/utils/date'
 import AppButton from '@/components/ui/AppButton.vue'
+// 📦 IMPORT XLSX LIBRARY
+import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 const authStore = useAuthStore()
 const amalanStore = useAmalanStore()
@@ -354,55 +411,50 @@ const amalanTargets = {
   'Doa kemenangan dakwah dan umat islam': '1x/hari'
 }
 
-// 📊 EXCEL EXPORT FUNCTION - FIXED & SIMPLE
 async function exportToExcel() {
   try {
     isExporting.value = true
-    console.log('📊 Starting Excel export...')
+    console.log('🎨 Creating beautiful Excel with ExcelJS...')
+    
+    // Import ExcelJS (pastikan sudah install: npm install exceljs)
+    const ExcelJS = (await import('exceljs')).default
     
     const reportData = amalanStore.monthlyReportData
     let amalanData = {}
     let useRealData = false
     
-    // Check for real data
+    // Check for real data (sama seperti sebelumnya)
     if (reportData && reportData.amalan && Object.keys(reportData.amalan).length > 0) {
       console.log('✅ Using real data')
       amalanData = reportData.amalan
       useRealData = true
     } else {
       console.log('⚠️ Using sample data')
-      // Create sample data with realistic values based on targets
       DEFAULT_AMALAN.forEach(amalan => {
         let atkVal, aysVal, ftrVal, winVal
         
-        // Set realistic sample values based on amalan type
         if (amalan.includes('Istighfar') || amalan.includes('Shalawat')) {
-          // High frequency amalan - 100x/hari target
-          atkVal = Math.floor(Math.random() * 200) + 50  // 50-250
+          atkVal = Math.floor(Math.random() * 200) + 50
           aysVal = Math.floor(Math.random() * 200) + 50
           ftrVal = Math.floor(Math.random() * 200) + 50
           winVal = Math.floor(Math.random() * 200) + 50
         } else if (amalan.includes('Shalat tepat waktu')) {
-          // 5x/hari = 35x/pekan
-          atkVal = Math.floor(Math.random() * 20) + 20   // 20-40
+          atkVal = Math.floor(Math.random() * 20) + 20
           aysVal = Math.floor(Math.random() * 20) + 20
           ftrVal = Math.floor(Math.random() * 20) + 20
           winVal = Math.floor(Math.random() * 20) + 20
         } else if (amalan.includes('Membaca Baqiyatush-shalihat')) {
-          // 10x/hari = 70x/pekan
-          atkVal = Math.floor(Math.random() * 30) + 40   // 40-70
+          atkVal = Math.floor(Math.random() * 30) + 40
           aysVal = Math.floor(Math.random() * 30) + 40
           ftrVal = Math.floor(Math.random() * 30) + 40
           winVal = Math.floor(Math.random() * 30) + 40
         } else if (amalan.includes('pekan')) {
-          // 3x/pekan target
-          atkVal = Math.floor(Math.random() * 5) + 1     // 1-6
+          atkVal = Math.floor(Math.random() * 5) + 1
           aysVal = Math.floor(Math.random() * 5) + 1
           ftrVal = Math.floor(Math.random() * 5) + 1
           winVal = Math.floor(Math.random() * 5) + 1
         } else {
-          // Daily amalan - 1x/hari = 7x/pekan
-          atkVal = Math.floor(Math.random() * 10) + 1    // 1-11
+          atkVal = Math.floor(Math.random() * 10) + 1
           aysVal = Math.floor(Math.random() * 10) + 1
           ftrVal = Math.floor(Math.random() * 10) + 1
           winVal = Math.floor(Math.random() * 10) + 1
@@ -420,117 +472,337 @@ async function exportToExcel() {
     
     const monthName = getMonthName(selectedMonth.value)
     
-    // 📋 CREATE HTML TABLE FOR EXCEL - SIMPLE & FOCUSED
-    let htmlContent = `
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        table { 
-          border-collapse: collapse; 
-          width: 100%; 
-          font-family: Arial, sans-serif; 
-          margin-bottom: 20px;
-        }
-        th, td { 
-          border: 1px solid #000; 
-          padding: 8px; 
-          text-align: center; 
-        }
-        th { 
-          background-color: #f2f2f2; 
-          font-weight: bold; 
-        }
-        .header { 
-          font-size: 18px; 
-          font-weight: bold; 
-          margin-bottom: 10px; 
-          text-align: center;
-        }
-        .info { 
-          margin-bottom: 5px; 
-          text-align: center;
-        }
-        .amalan-name {
-          text-align: left;
-          width: 300px;
-        }
-        .target-col {
-          text-align: center;
-          width: 100px;
-          background-color: #ffffcc;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">LAPORAN AMALAN HARIAN</div>
-      <div class="info">Periode: ${monthName} ${selectedYear.value}</div>
-      <div class="info">Tanggal: ${new Date().toLocaleDateString('id-ID')}</div>
-      <br>
-      
-      <table>
-        <thead>
-          <tr>
-            <th class="amalan-name">NAMA AMALAN</th>
-            <th class="target-col">TARGET</th>
-            <th>ATK</th>
-            <th>AYS</th>
-            <th>FTR</th>
-            <th>WIN</th>
-          </tr>
-        </thead>
-        <tbody>
-    `
+    // 🎨 CREATE BEAUTIFUL WORKBOOK dengan ExcelJS
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet(`📊 Laporan ${monthName}`, {
+      properties: { 
+        tabColor: { argb: 'FF4F46E5' } // Indigo tab color
+      }
+    })
     
-    // Add data rows dengan target
-    DEFAULT_AMALAN.forEach(amalan => {
+    // 🎨 STYLING DEFINITIONS
+    const headerStyle = {
+      font: { 
+        name: 'Calibri', 
+        size: 16, 
+        bold: true, 
+        color: { argb: 'FFFFFFFF' } 
+      },
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF4F46E5' } // Indigo
+      },
+      alignment: { 
+        horizontal: 'center', 
+        vertical: 'middle' 
+      },
+      border: {
+        top: { style: 'thick' },
+        left: { style: 'thick' },
+        bottom: { style: 'thick' },
+        right: { style: 'thick' }
+      }
+    }
+    
+    const subHeaderStyle = {
+      font: { 
+        name: 'Calibri', 
+        size: 12, 
+        bold: true, 
+        color: { argb: 'FFFFFFFF' } 
+      },
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF7C3AED' } // Purple
+      },
+      alignment: { 
+        horizontal: 'center', 
+        vertical: 'middle' 
+      }
+    }
+    
+    const tableHeaderStyle = {
+      font: { 
+        name: 'Calibri', 
+        size: 11, 
+        bold: true, 
+        color: { argb: 'FFFFFFFF' } 
+      },
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF10B981' } // Emerald
+      },
+      alignment: { 
+        horizontal: 'center', 
+        vertical: 'middle' 
+      },
+      border: {
+        top: { style: 'medium' },
+        left: { style: 'thin' },
+        bottom: { style: 'medium' },
+        right: { style: 'thin' }
+      }
+    }
+    
+    // 📍 HEADER SECTION
+    worksheet.mergeCells('A1:G1')
+    worksheet.getCell('A1').value = '📊 LAPORAN AMALAN HARIAN'
+    worksheet.getCell('A1').style = headerStyle
+    worksheet.getRow(1).height = 30
+    
+    worksheet.mergeCells('A2:G2')
+    worksheet.getCell('A2').value = `📅 Periode: ${monthName} ${selectedYear.value}`
+    worksheet.getCell('A2').style = subHeaderStyle
+    worksheet.getRow(2).height = 25
+    
+    worksheet.mergeCells('A3:G3')
+    worksheet.getCell('A3').value = `📄 Tanggal Export: ${new Date().toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric', 
+      month: 'long',
+      day: 'numeric'
+    })}`
+    worksheet.getCell('A3').style = {
+      font: { 
+        name: 'Calibri', 
+        size: 10, 
+        italic: true, 
+        color: { argb: 'FF6B7280' } 
+      },
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF3F4F6' } // Light gray
+      },
+      alignment: { 
+        horizontal: 'center', 
+        vertical: 'middle' 
+      }
+    }
+    worksheet.getRow(3).height = 20
+    
+    // Empty rows
+    worksheet.getRow(4).height = 10
+    worksheet.getRow(5).height = 10
+    
+    // 🏆 TABLE HEADER - Row 6
+    const headers = ['📋 NAMA AMALAN', '🎯 TARGET', '🧕 ATK', '🧕 AYS', '🧕 FTR', '🧕 WIN', '📊 TOTAL']
+    const headerColors = ['FF10B981', 'FFF59E0B', 'FF3B82F6', 'FF3B82F6', 'FF3B82F6', 'FF3B82F6', 'FFEF4444']
+    
+    headers.forEach((header, index) => {
+      const cell = worksheet.getCell(6, index + 1)
+      cell.value = header
+      cell.style = {
+        ...tableHeaderStyle,
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: headerColors[index] }
+        }
+      }
+    })
+    worksheet.getRow(6).height = 25
+    
+    // 📊 DATA ROWS - Starting from row 7
+    let currentRow = 7
+    DEFAULT_AMALAN.forEach((amalan, index) => {
       const data = amalanData[amalan] || {}
       const target = amalanTargets[amalan] || '-'
+      const atk = data['ATK'] || 0
+      const ays = data['AYS'] || 0  
+      const ftr = data['FTR'] || 0
+      const win = data['WIN'] || 0
+      const total = atk + ays + ftr + win
       
-      htmlContent += `
-        <tr>
-          <td class="amalan-name">${amalan}</td>
-          <td class="target-col">${target}</td>
-          <td>${data['ATK'] || 0}</td>
-          <td>${data['AYS'] || 0}</td>
-          <td>${data['FTR'] || 0}</td>
-          <td>${data['WIN'] || 0}</td>
-        </tr>
-      `
+      const row = worksheet.getRow(currentRow)
+      
+      // Set values
+      row.getCell(1).value = amalan
+      row.getCell(2).value = target
+      row.getCell(3).value = atk
+      row.getCell(4).value = ays
+      row.getCell(5).value = ftr
+      row.getCell(6).value = win
+      row.getCell(7).value = total
+      
+      // Styling per cell
+      const isEven = index % 2 === 0
+      const bgColor = isEven ? 'FFF8FAFC' : 'FFFFFFFF'
+      
+      // Nama Amalan
+      row.getCell(1).style = {
+        font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1F2937' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } },
+        alignment: { horizontal: 'left', vertical: 'middle' },
+        border: {
+          top: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          left: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          right: { style: 'thin', color: { argb: 'FFD1D5DB' } }
+        }
+      }
+      
+      // Target
+      row.getCell(2).style = {
+        font: { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF92400E' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } },
+        alignment: { horizontal: 'center', vertical: 'middle' },
+        border: {
+          top: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          left: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          right: { style: 'thin', color: { argb: 'FFD1D5DB' } }
+        }
+      }
+      
+      // Member data (ATK, AYS, FTR, WIN)
+      for (let col = 3; col <= 6; col++) {
+        const value = row.getCell(col).value
+        const fontColor = value > 0 ? 'FF059669' : 'FF6B7280'
+        const cellBg = value > 0 ? 'FFECFDF5' : bgColor
+        
+        row.getCell(col).style = {
+          font: { name: 'Calibri', size: 10, bold: true, color: { argb: fontColor } },
+          fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: cellBg } },
+          alignment: { horizontal: 'center', vertical: 'middle' },
+          border: {
+            top: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+            left: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+            bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+            right: { style: 'thin', color: { argb: 'FFD1D5DB' } }
+          }
+        }
+      }
+      
+      // Total
+      row.getCell(7).style = {
+        font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } },
+        alignment: { horizontal: 'center', vertical: 'middle' },
+        border: {
+          top: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          left: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          right: { style: 'thin', color: { argb: 'FFD1D5DB' } }
+        }
+      }
+      
+      row.height = 20
+      currentRow++
     })
     
-    htmlContent += `
-        </tbody>
-      </table>
-      
-      <br>
-      <div style="text-align: center; font-size: 12px; color: #666;">
-        ${useRealData ? 'Data: Real dari database' : 'Data: Sample untuk testing'}<br>
-        Target menunjukkan frekuensi ideal per amalan
-      </div>
-    </body>
-    </html>
-    `
+    // 📈 SUMMARY SECTION
+    currentRow += 2
     
-    // 💾 CREATE DOWNLOADABLE FILE
-    const blob = new Blob([htmlContent], { 
-      type: 'application/vnd.ms-excel;charset=utf-8;' 
+    worksheet.getCell(currentRow, 1).value = '📈 RINGKASAN LAPORAN'
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } },
+      alignment: { horizontal: 'left', vertical: 'middle' }
+    }
+    worksheet.mergeCells(`A${currentRow}:G${currentRow}`)
+    worksheet.getRow(currentRow).height = 25
+    
+    currentRow += 2
+    
+    // Calculate totals per member
+    const memberTotals = {}
+    MEMBERS.forEach(member => {
+      let total = 0
+      Object.entries(amalanData).forEach(([amalanName, amalanMemberData]) => {
+        total += amalanMemberData[member] || 0
+      })
+      memberTotals[member] = total
     })
-    const url = URL.createObjectURL(blob)
+    
+    // Add member summary with beautiful styling
+    worksheet.getCell(currentRow, 1).value = '👥 TOTAL PER ANGGOTA:'
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF1F2937' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } }
+    }
+    currentRow++
+    
+    Object.entries(memberTotals).forEach(([member, total]) => {
+      worksheet.getCell(currentRow, 1).value = `${member}:`
+      worksheet.getCell(currentRow, 2).value = `${total} amalan`
+      
+      worksheet.getCell(currentRow, 1).style = {
+        font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF3B82F6' } }
+      }
+      worksheet.getCell(currentRow, 2).style = {
+        font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF10B981' } }
+      }
+      currentRow++
+    })
+    
+    currentRow += 2
+    
+    // 📋 NOTES SECTION  
+    worksheet.getCell(currentRow, 1).value = '📋 CATATAN:'
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF59E0B' } }
+    }
+    currentRow++
+    
+    const notes = [
+      useRealData ? '✅ Data real dari database' : '⚠️ Data sample untuk testing',
+      '📋 Target menunjukkan frekuensi ideal per amalan',
+      '🎯 Total = ATK + AYS + FTR + WIN',
+      '💡 Hijau = ada progress, Abu-abu = belum ada data'
+    ]
+    
+    notes.forEach(note => {
+      worksheet.getCell(currentRow, 1).value = note
+      worksheet.getCell(currentRow, 1).style = {
+        font: { name: 'Calibri', size: 10, color: { argb: 'FF374151' } }
+      }
+      currentRow++
+    })
+    
+    // 📐 SET COLUMN WIDTHS
+    worksheet.getColumn(1).width = 40 // Nama Amalan
+    worksheet.getColumn(2).width = 15 // Target
+    worksheet.getColumn(3).width = 10 // ATK
+    worksheet.getColumn(4).width = 10 // AYS
+    worksheet.getColumn(5).width = 10 // FTR
+    worksheet.getColumn(6).width = 10 // WIN
+    worksheet.getColumn(7).width = 12 // TOTAL
+    
+    // 💾 DOWNLOAD FILE
+    const fileName = `📊 Laporan_Amalan_${monthName}_${selectedYear.value}.xlsx`
+    
+    // Create buffer and download
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    // Create download link
+    const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `Laporan_${monthName}${selectedYear.value}.xls`
-    document.body.appendChild(link)
+    link.download = fileName
     link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    window.URL.revokeObjectURL(url)
     
-    console.log('✅ Excel export completed successfully')
-    uiStore.showToast('Berhasil export ke Excel!', 'success')
+    console.log('✨ Beautiful ExcelJS export completed successfully')
+    uiStore.showToast('✨ Berhasil export Excel!', 'success')
     
   } catch (error) {
-    console.error('❌ Export error:', error)
-    uiStore.showToast('Gagal export data', 'error')
+    console.error('❌ ExcelJS export error:', error)
+    
+    let errorMessage = 'Gagal export ke Excel'
+    if (error.message && error.message.includes('ExcelJS')) {
+      errorMessage = 'Library ExcelJS belum terinstall. Jalankan: npm install exceljs'
+    }
+    
+    uiStore.showToast(errorMessage, 'error')
+    
   } finally {
     isExporting.value = false
   }
@@ -617,6 +889,23 @@ function getMemberTopRoutine(member) {
   }
 }
 
+function getAmalanValue(amalanName, memberName) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan || !reportData.amalan[amalanName]) {
+    return 0
+  }
+  
+  return reportData.amalan[amalanName][memberName] || 0
+}
+
+function getValueColorClass(value) {
+  if (value > 0) {
+    return 'text-green-600 bg-green-50'
+  }
+  return 'text-gray-400 bg-gray-50'
+}
+
 function getMemberStats(member) {
   const reportData = amalanStore.monthlyReportData
   
@@ -654,4 +943,4 @@ function getProgressColor(index) {
 onMounted(async () => {
   await loadReportData()
 })
-</script>
+</script> 

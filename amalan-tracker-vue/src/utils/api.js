@@ -37,7 +37,7 @@ class AmalanAPI {
     }
 
     return new Promise((resolve, reject) => {
-      const callbackName = 'jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 10000)
+      let callbackName = 'jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 10000)
       
       while (window[callbackName]) {
         callbackName += '_' + Math.floor(Math.random() * 100)

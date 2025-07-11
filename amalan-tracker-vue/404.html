@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Redirecting...</title>
+    
+    <!-- 🔧 GitHub Pages SPA Fix untuk /kelasgrup3/ -->
+    <script>
+        // Store the current path and redirect to index.html
+        var pathSegmentsToKeep = 1; // Untuk repo name "kelasgrup3"
+        
+        var l = window.location;
+        var redirectPath = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + 
+            '/?/' + 
+            l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+            l.hash;
+            
+        // Immediate redirect
+        window.location.replace(redirectPath);
+    </script>
+    
+    <!-- Fallback untuk user yang disable JavaScript -->
+    <noscript>
+        <meta http-equiv="refresh" content="0; url=/kelasgrup3/">
+    </noscript>
+    
+    <!-- Icon yang sama dengan app -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23D4A6A6' rx='6'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white'>📿</text></svg>" />
+</head>
+<body style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', Arial, sans-serif;">
+    <div style="background: white; border-radius: 15px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 400px; margin: 20px;">
+        <div style="font-size: 48px; margin-bottom: 20px;">📿</div>
+        <h2 style="color: #4F46E5; margin: 0 0 15px 0; font-size: 24px;">🔄 Redirecting...</h2>
+        <p style="color: #6B7280; margin: 0 0 20px 0; font-size: 16px;">Mengarahkan ke halaman yang benar...</p>
+        <p style="font-size: 14px; color: #9CA3AF;">
+            Jika tidak redirect otomatis, 
+            <a href="/kelasgrup3/" style="color: #4F46E5; text-decoration: none; font-weight: 600;">klik di sini</a>
+        </p>
+    </div>
+</body>
+</html>

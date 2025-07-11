@@ -7,18 +7,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#D4A6A6" />
   <meta name="description" content="Aplikasi tracking amalan harian dengan Vue.js 3" />
-  
+ 
   <!-- PWA -->
   <link rel="manifest" href="/kelasgrup3/manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Amalan Tracker" />
-  
+ 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
-  
+ 
+  <!-- 🔧 GitHub Pages SPA Fix - TAMBAHAN INI -->
+  <script>
+    (function() {
+      // Handle GitHub Pages SPA redirect dari 404.html
+      if (window.location.search) {
+        var redirect = window.location.search.match(/[?&]\/([^&]*)/);
+        if (redirect) {
+          var redirectPath = '/' + redirect[1].replace(/~/g, '&');
+          // Replace current history state agar URL bersih
+          window.history.replaceState(null, null, redirectPath);
+        }
+      }
+    })();
+  </script>
+ 
   <title>Amalan Tracker</title>
 </head>
 <body>
