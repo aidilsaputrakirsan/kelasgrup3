@@ -1,4 +1,4 @@
-<!-- 📄 src/views/ReportView.vue - FINAL FIXED VERSION -->
+<!-- 📄 src/views/ReportView.vue - DYNAMIC VERSION -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
     <!-- Header -->
@@ -90,7 +90,7 @@
         </div>
       </div>
       
-      <!-- Tabel Data Amalan - SEPERTI EXCEL -->
+      <!-- Tabel Data Amalan - DYNAMIC -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span>📋</span> Tabel Data Amalan
@@ -122,7 +122,7 @@
                   {{ amalan }}
                 </td>
                 <td class="border border-gray-300 px-2 py-2 text-center text-xs bg-yellow-50 text-gray-700 font-medium">
-                  {{ amalanTargets.value[amalan] || '-' }}
+                  {{ amalanTargets[amalan] || '-' }}
                 </td>
                 <td 
                   v-for="member in MEMBERS" 
@@ -146,7 +146,7 @@
         </div>
       </div>
 
-      <!-- Export Section - UPDATED ke .xlsx -->
+      <!-- Export Section -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span>📤</span> Export Data
@@ -168,11 +168,10 @@
             </template>
             Export ke Excel (.xlsx)
           </AppButton>
-          
-          </div>
+        </div>
       </div>
       
-      <!-- Top Performers - FIXED LOGIC -->
+      <!-- Top Performers -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <div class="flex justify-between items-start mb-4">
           <h3 class="font-bold text-gray-800 flex items-center gap-2">
@@ -221,7 +220,7 @@
         </div>
       </div>
       
-      <!-- Member Details - IMPROVED LOGIC -->
+      <!-- Member Details -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <div class="flex justify-between items-start mb-4">
           <h3 class="font-bold text-gray-800 flex items-center gap-2">
@@ -303,7 +302,6 @@ import { useUiStore } from '@/stores/ui'
 import { MEMBERS, DEFAULT_AMALAN, AMALAN_CONFIG } from '@/utils/constants'
 import { getMonthName, getCurrentMonth, getCurrentYear } from '@/utils/date'
 import AppButton from '@/components/ui/AppButton.vue'
-// 📦 IMPORT XLSX LIBRARY
 import * as XLSX from 'xlsx'
 import ExcelJS from 'exceljs'
 
@@ -316,6 +314,23 @@ const selectedMonth = ref(getCurrentMonth())
 const selectedYear = ref(getCurrentYear())
 const isLoading = ref(false)
 const isExporting = ref(false)
+
+// 🎯 DYNAMIC TARGETS dari AMALAN_CONFIG
+const amalanTargets = computed(() => {
+  const targets = {}
+  Object.entries(AMALAN_CONFIG).forEach(([amalan, config]) => {
+    targets[amalan] = config.dailyText
+  })
+  return targets
+})
+
+const amalanWeeklyTargets = computed(() => {
+  const targets = {}
+  Object.entries(AMALAN_CONFIG).forEach(([amalan, config]) => {
+    targets[amalan] = config.weeklyTarget
+  })
+  return targets
+})
 
 // Computed
 const yearRange = computed(() => {
@@ -382,7 +397,7 @@ const topConsistentMembers = computed(() => {
   })
   
   // Calculate percentage berdasarkan TOTAL AMALAN, bukan activeTypes tertinggi
-  const totalAmalanTypes = DEFAULT_AMALAN.length // 11 amalan
+  const totalAmalanTypes = DEFAULT_AMALAN.length
   
   return members.map(member => ({
     ...member,
@@ -390,42 +405,18 @@ const topConsistentMembers = computed(() => {
   }))
 })
 
-const topPerformers = computed(() => {
-  // Keep this for backward compatibility, tapi sekarang gunakan topConsistentMembers
-  return topConsistentMembers.value
-})
-
-// Tambah setelah computed yang sudah ada
-const amalanTargets = computed(() => {
-  const targets = {}
-  Object.entries(AMALAN_CONFIG).forEach(([amalan, config]) => {
-    targets[amalan] = config.dailyText
-  })
-  return targets
-})
-
-const amalanWeeklyTargets = computed(() => {
-  const targets = {}
-  Object.entries(AMALAN_CONFIG).forEach(([amalan, config]) => {
-    targets[amalan] = config.weeklyTarget
-  })
-  return targets
-})
-
-
 async function exportToExcel() {
   try {
     isExporting.value = true
     console.log('🎨 Creating beautiful Excel with ExcelJS...')
     
-    // Import ExcelJS (pastikan sudah install: npm install exceljs)
     const ExcelJS = (await import('exceljs')).default
     
     const reportData = amalanStore.monthlyReportData
     let amalanData = {}
     let useRealData = false
     
-    // Check for real data (sama seperti sebelumnya)
+    // Check for real data
     if (reportData && reportData.amalan && Object.keys(reportData.amalan).length > 0) {
       console.log('✅ Using real data')
       amalanData = reportData.amalan
@@ -433,41 +424,26 @@ async function exportToExcel() {
     } else {
       console.log('⚠️ Using sample data')
       DEFAULT_AMALAN.forEach(amalan => {
-        let atkVal, aysVal, ftrVal, winVal
-        
-        if (amalan.includes('Istighfar') || amalan.includes('Shalawat')) {
-          atkVal = Math.floor(Math.random() * 200) + 50
-          aysVal = Math.floor(Math.random() * 200) + 50
-          ftrVal = Math.floor(Math.random() * 200) + 50
-          winVal = Math.floor(Math.random() * 200) + 50
-        } else if (amalan.includes('Shalat tepat waktu')) {
-          atkVal = Math.floor(Math.random() * 20) + 20
-          aysVal = Math.floor(Math.random() * 20) + 20
-          ftrVal = Math.floor(Math.random() * 20) + 20
-          winVal = Math.floor(Math.random() * 20) + 20
-        } else if (amalan.includes('Membaca Buku')) {
-          atkVal = Math.floor(Math.random() * 30) + 40
-          aysVal = Math.floor(Math.random() * 30) + 40
-          ftrVal = Math.floor(Math.random() * 30) + 40
-          winVal = Math.floor(Math.random() * 30) + 40
-        } else if (amalan.includes('pekan')) {
-          atkVal = Math.floor(Math.random() * 5) + 1
-          aysVal = Math.floor(Math.random() * 5) + 1
-          ftrVal = Math.floor(Math.random() * 5) + 1
-          winVal = Math.floor(Math.random() * 5) + 1
-        } else {
-          atkVal = Math.floor(Math.random() * 10) + 1
-          aysVal = Math.floor(Math.random() * 10) + 1
-          ftrVal = Math.floor(Math.random() * 10) + 1
-          winVal = Math.floor(Math.random() * 10) + 1
-        }
+        const sampleData = {}
+        MEMBERS.forEach(member => {
+          const config = AMALAN_CONFIG[amalan]
+          if (config) {
+            const weekly = config.weeklyTarget
+            if (weekly >= 100) {
+              sampleData[member] = Math.floor(Math.random() * 200) + 50
+            } else if (weekly >= 10) {
+              sampleData[member] = Math.floor(Math.random() * weekly) + 5
+            } else {
+              sampleData[member] = Math.floor(Math.random() * weekly) + 1
+            }
+          } else {
+            sampleData[member] = Math.floor(Math.random() * 10) + 1
+          }
+        })
         
         amalanData[amalan] = {
-          'ATK': atkVal,
-          'AYS': aysVal,
-          'FTR': ftrVal,
-          'WIN': winVal,
-          total: atkVal + aysVal + ftrVal + winVal
+          ...sampleData,
+          total: Object.values(sampleData).reduce((sum, val) => sum + val, 0)
         }
       })
     }
@@ -478,7 +454,7 @@ async function exportToExcel() {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet(`📊 Laporan ${monthName}`, {
       properties: { 
-        tabColor: { argb: 'FF4F46E5' } // Indigo tab color
+        tabColor: { argb: 'FF4F46E5' }
       }
     })
     
@@ -493,7 +469,7 @@ async function exportToExcel() {
       fill: {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FF4F46E5' } // Indigo
+        fgColor: { argb: 'FF4F46E5' }
       },
       alignment: { 
         horizontal: 'center', 
@@ -517,7 +493,7 @@ async function exportToExcel() {
       fill: {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FF7C3AED' } // Purple
+        fgColor: { argb: 'FF7C3AED' }
       },
       alignment: { 
         horizontal: 'center', 
@@ -535,7 +511,7 @@ async function exportToExcel() {
       fill: {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FF10B981' } // Emerald
+        fgColor: { argb: 'FF10B981' }
       },
       alignment: { 
         horizontal: 'center', 
@@ -549,8 +525,8 @@ async function exportToExcel() {
       }
     }
     
-    const totalCols = 2 + MEMBERS.length + 1  // Nama + Target + Members + Total = 8
-    const lastCol = String.fromCharCode(64 + totalCols) // A=65, jadi H=72
+    const totalCols = 2 + MEMBERS.length + 1  // Nama + Target + Members + Total
+    const lastCol = String.fromCharCode(64 + totalCols)
 
     // 📍 HEADER SECTION
     worksheet.mergeCells(`A1:${lastCol}1`)
@@ -580,7 +556,7 @@ async function exportToExcel() {
       fill: {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FFF3F4F6' } // Light gray
+        fgColor: { argb: 'FFF3F4F6' }
       },
       alignment: { 
         horizontal: 'center', 
@@ -659,7 +635,7 @@ async function exportToExcel() {
         }
       }
       
-      // Member data (ATK, AYS, FTR, WIN)
+      // Member data
       for (let col = 3; col <= 2 + MEMBERS.length; col++) {
         const value = row.getCell(col).value
         const fontColor = value > 0 ? 'FF059669' : 'FF6B7280'
@@ -891,20 +867,6 @@ function getValueColorClass(value) {
   return 'text-gray-400 bg-gray-50'
 }
 
-function getMemberStats(member) {
-  const reportData = amalanStore.monthlyReportData
-  
-  if (!reportData || !reportData.members || !reportData.members[member]) {
-    return {
-      totalAmalan: 0,
-      topAmalan: '-',
-      consistency: 0
-    }
-  }
-  
-  return reportData.members[member]
-}
-
 function getRankClasses(index) {
   const classes = [
     'bg-gradient-to-r from-yellow-400 to-orange-500',
@@ -929,6 +891,7 @@ onMounted(async () => {
   await loadReportData()
 })
 </script> 
+
 <style scoped>
 /* Fix table borders untuk dynamic columns */
 table {
