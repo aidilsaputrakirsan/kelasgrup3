@@ -1,4 +1,4 @@
-<!-- 📄 src/components/features/dashboard/MemberCard.vue - DYNAMIC VERSION -->
+<!-- 📄 MemberCard.vue - COMPLETE UPDATE dengan Emoji Berbeda + Keterangan -->
 <template>
   <div
     :class="cardClasses"
@@ -48,7 +48,7 @@
       <!-- Member name -->
       <h4 class="text-center font-bold text-gray-800 mb-2 text-sm sm:text-base">{{ member }}</h4>
       
-      <!-- Activity Status - SMART INSTEAD OF FAKE STREAK -->
+      <!-- Activity Status - UPDATED dengan emoji berbeda -->
       <div class="flex items-center justify-center gap-1 mb-3 sm:mb-4">
         <span :class="activityStatusIcon.color" class="text-base sm:text-lg">{{ activityStatusIcon.icon }}</span>
         <span class="font-medium text-gray-700 text-xs sm:text-sm">{{ activityStatusText }}</span>
@@ -62,8 +62,8 @@
         <div class="text-xs text-gray-500">Progress pekan ini</div>
       </div>
       
-      <!-- Stats breakdown - REAL DATA with better mobile layout -->
-      <div class="grid grid-cols-2 gap-2 sm:gap-3 text-center">
+      <!-- Stats breakdown -->
+      <div class="grid grid-cols-2 gap-2 sm:gap-3 text-center mb-3">
         <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-2 sm:p-3">
           <div class="font-bold text-pink-600 text-sm sm:text-base">{{ memberStats.totalAmalan }}</div>
           <div class="text-xs text-pink-500">Total</div>
@@ -117,60 +117,70 @@ const memberStats = computed(() => ({
   completedAmalan: props.data.completedAmalan || 0
 }))
 
-// 🎯 DYNAMIC weekly target dari AMALAN_CONFIG
-const weeklyTarget = computed(() => {
-  return Object.values(AMALAN_CONFIG).reduce((sum, config) => sum + config.weeklyTarget, 0)
-})
-
-// Progress percentage berdasarkan realistic target
+// ✅ NEW: Progress percentage berdasarkan per-amalan average
 const progressPercentage = computed(() => {
-  const completed = memberStats.value.totalAmalan
-  const target = weeklyTarget.value
+  const amalanDetails = props.data.amalanDetails || {}
   
-  if (target === 0) return 0
+  // Kalau tidak ada amalanDetails, fallback ke 0
+  if (Object.keys(amalanDetails).length === 0) {
+    return 0
+  }
   
-  const percentage = Math.round((completed / target) * 100)
-  return Math.min(percentage, 100) // Cap at 100%
+  // Hitung progress per amalan
+  const amalanProgressList = Object.entries(AMALAN_CONFIG).map(([amalanName, config]) => {
+    const achieved = amalanDetails[amalanName] || 0
+    const target = config.weeklyTarget
+    
+    if (target === 0) return 0
+    
+    // Progress per amalan (max 100%)
+    const progress = Math.min((achieved / target) * 100, 100)
+    return progress
+  })
+  
+  // Rata-rata semua progress amalan
+  const averageProgress = amalanProgressList.reduce((sum, progress) => sum + progress, 0) / amalanProgressList.length
+  
+  return Math.round(averageProgress)
 })
 
-// 🧠 SMART activity status instead of fake streak
+// ✅ UPDATED: Activity status dengan emoji berbeda untuk belum aktif
 const activityStatusIcon = computed(() => {
-  const total = memberStats.value.totalAmalan
-  const types = memberStats.value.completedAmalan
+  const progress = progressPercentage.value
   
-  if (total === 0 && types === 0) {
-    return { icon: '😴', color: 'text-gray-400' }
-  } else if (types >= 8) {
-    return { icon: '🔥', color: 'text-red-500' }
-  } else if (types >= 5) {
-    return { icon: '⚡', color: 'text-yellow-500' }
-  } else if (types >= 3) {
-    return { icon: '✨', color: 'text-blue-500' }
-  } else if (types >= 1) {
-    return { icon: '🌱', color: 'text-green-500' }
+  if (progress === 0) {
+    return { icon: '😭', color: 'text-gray-500' }        // Belum aktif - emoji nangis
+  } else if (progress >= 80) {
+    return { icon: '🔥', color: 'text-red-500' }         // Sangat aktif
+  } else if (progress >= 60) {
+    return { icon: '⚡', color: 'text-yellow-500' }      // Aktif
+  } else if (progress >= 40) {
+    return { icon: '✨', color: 'text-blue-500' }        // Cukup aktif
+  } else if (progress >= 20) {
+    return { icon: '🌱', color: 'text-green-500' }       // Mulai aktif
   } else {
-    return { icon: '😴', color: 'text-gray-400' }
+    return { icon: '😴', color: 'text-gray-400' }        // Kurang aktif - emoji tidur
   }
 })
 
 const activityStatusText = computed(() => {
-  const total = memberStats.value.totalAmalan
-  const types = memberStats.value.completedAmalan
+  const progress = progressPercentage.value
   
-  if (total === 0 && types === 0) {
-    return 'Belum aktif'
-  } else if (types >= 8) {
-    return 'Sangat aktif'
-  } else if (types >= 5) {
-    return 'Aktif'
-  } else if (types >= 3) {
-    return 'Cukup aktif'
-  } else if (types >= 1) {
-    return 'Mulai aktif'
+  if (progress === 0) {
+    return 'Belum aktif'      // 0% - belum ada amalan
+  } else if (progress >= 80) {
+    return 'Sangat aktif'     // 80%+ 
+  } else if (progress >= 60) {
+    return 'Aktif'            // 60-79%
+  } else if (progress >= 40) {
+    return 'Cukup aktif'      // 40-59%
+  } else if (progress >= 20) {
+    return 'Mulai aktif'      // 20-39%
   } else {
-    return 'Kurang aktif'
+    return 'Kurang aktif'     // 1-19%
   }
 })
+
 
 const progressCircumference = computed(() => 2 * Math.PI * 28) // r=28
 
@@ -190,10 +200,9 @@ const hasAchievement = computed(() => {
 
 const achievementIcon = computed(() => {
   const percentage = progressPercentage.value
-  const types = memberStats.value.completedAmalan
   
-  if (percentage >= 80) return '🏆'
-  if (types >= 8) return '⭐'
+  if (percentage >= 90) return '🏆'
+  if (percentage >= 70) return '⭐'
   if (percentage >= 50) return '🎯'
   return '🏅'
 })

@@ -101,6 +101,37 @@
           </h3>
           <p class="text-xs sm:text-sm text-gray-500">Tap untuk detail</p>
         </div>
+
+        <!-- ✅ TAMBAH: Activity Status Legend -->
+        <div class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200/50">
+          <p class="text-xs font-medium text-gray-700 mb-2">📊 Kategori Activity:</p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-1 text-xs text-gray-600">
+            <div class="flex items-center gap-1">
+              <span>🔥</span>
+              <span>Sangat aktif (80%+)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span>⚡</span>
+              <span>Aktif (60-79%)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span>✨</span>
+              <span>Cukup aktif (40-59%)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span>🌱</span>
+              <span>Mulai aktif (20-39%)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span>😴</span>
+              <span>Kurang aktif (1-19%)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span>😭</span>
+              <span>Belum aktif (0%)</span>
+            </div>
+          </div>
+        </div>
         
         <!-- Loading state untuk members -->
         <div v-if="isLoadingMembers" class="grid grid-cols-2 gap-3 sm:gap-4">

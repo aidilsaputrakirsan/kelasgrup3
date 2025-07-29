@@ -17,7 +17,7 @@ export const DEFAULT_AMALAN = [
 ]
 
 export const API_CONFIG = {
-  BASE_URL: 'https://script.google.com/macros/s/AKfycbxWi7obQu3HU4aB7zTtUpH3N0lg3ozmbfox9Xq1zB0mrChb9NfwpT36SbrCPauI_I60/exec',
+  BASE_URL: 'https://script.google.com/macros/s/AKfycbxhVW93tZwZxkRAXFs6rKp5qB2g-MNDNQuHuPAmeRnSZmhOrgNZlrYEQzePdYr5Pxgy/exec',
   TIMEOUT: 30000,
   RETRY_COUNT: 3,
   RETRY_DELAY: 1000,
