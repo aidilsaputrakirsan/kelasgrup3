@@ -213,7 +213,7 @@
       </div>
       
 
-      <!-- Recent Activity & Motivation - LEBIH PERSONAL -->
+      <!-- Recent Activity & Motivation - LEBIH PERSONAL 
       <div v-if="recentActivities.length > 0" class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
           <span>⚡</span> Aktivitas Terbaru
@@ -242,7 +242,6 @@
           </div>
         </div>
         
-        <!-- Motivational insight -->
         <div class="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
           <div class="flex items-center gap-2">
             <span class="text-yellow-600">💡</span>
@@ -250,6 +249,7 @@
           </div>
         </div>
       </div>
+      -->
 
       <!-- Islamic Inspiration -->
       <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-emerald-200/50 shadow-sm">
