@@ -1,5 +1,5 @@
-// 📄 src/utils/api.js - FIXED VERSION (Backward Compatible)
-import { API_CONFIG } from './constants'
+// 📄 src/utils/api.js - FIXED VERSION (Backward Compatible + Hari Halangan Support)
+import { API_CONFIG, DEFAULT_AMALAN, HARI_HALANGAN } from './constants'  // ✅ IMPORT HARI_HALANGAN
 import { MEMBERS } from './constants'
 
 class AmalanAPI {
@@ -225,17 +225,29 @@ class AmalanAPI {
     }
   }
 
-  // 🔧 FIX: Kembalikan ke signature asli (individual parameters)
+  // ✅ FIXED: Update validation untuk support Hari Halangan
   async updateAmalan(member, amalanName, jumlah, week, month, year) {
     console.log('💾 updateAmalan called with:', { member, amalanName, jumlah, week, month, year })
     
-    // 🔧 VALIDATION: Pastikan parameter valid
-    if (!member || !['ATK', 'AYS', 'FTR', 'WIN', 'HMA'].includes(member)) {
+    // 🔧 VALIDATION: Pastikan member valid
+    if (!member || !MEMBERS.includes(member)) {
       throw new Error(`Invalid member: ${member}`)
     }
     
-    if (!amalanName || amalanName.trim() === '') {
+    // ✅ FIXED: Include Hari Halangan dalam validasi
+    const validAmalanNames = [...DEFAULT_AMALAN, HARI_HALANGAN.FIELD_NAME]
+    if (!amalanName || !validAmalanNames.includes(amalanName)) {
+      console.error('❌ Invalid amalan name:', amalanName)
+      console.error('Valid amalan names:', validAmalanNames)
       throw new Error(`Invalid amalan name: ${amalanName}`)
+    }
+
+    // ✅ ADDED: Special validation untuk Hari Halangan
+    if (amalanName === HARI_HALANGAN.FIELD_NAME) {
+      const numericValue = parseInt(jumlah) || 0
+      if (numericValue < 0 || numericValue > HARI_HALANGAN.MAX_DAYS) {
+        throw new Error(`Hari Halangan harus antara 0-${HARI_HALANGAN.MAX_DAYS} hari`)
+      }
     }
 
     try {
@@ -339,6 +351,17 @@ class AmalanAPI {
     return new Date().getFullYear()
   }
 
+  // ✅ NEW: Helper method untuk validasi amalan name
+  isValidAmalanName(amalanName) {
+    const validAmalanNames = [...DEFAULT_AMALAN, HARI_HALANGAN.FIELD_NAME]
+    return validAmalanNames.includes(amalanName)
+  }
+
+  // ✅ NEW: Helper method untuk get all valid amalan names
+  getValidAmalanNames() {
+    return [...DEFAULT_AMALAN, HARI_HALANGAN.FIELD_NAME]
+  }
+
   // Debug methods
   debugAPI() {
     console.log('🐛 API Debug Info:')
@@ -347,6 +370,7 @@ class AmalanAPI {
     console.log('Current Month:', this.getCurrentMonth())
     console.log('Current Year:', this.getCurrentYear())
     console.log('Cache Size:', this.cache.size)
+    console.log('Valid Amalan Names:', this.getValidAmalanNames())  // ✅ ADDED
     
     // Test health check
     this.healthCheck().then(response => {

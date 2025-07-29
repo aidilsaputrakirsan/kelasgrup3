@@ -1,9 +1,9 @@
-// 📄 src/stores/amalan.js - FIXED VERSION (Backward Compatible)
+// 📄 src/stores/amalan.js - FIXED VERSION with Hari Halangan Support
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { MEMBERS, DEFAULT_AMALAN } from '@/utils/constants'
+import { MEMBERS, DEFAULT_AMALAN, HARI_HALANGAN } from '@/utils/constants'  // ✅ IMPORT HARI_HALANGAN
 import { getCurrentWeek, getCurrentMonth, getCurrentYear } from '@/utils/date'
-import { api } from '@/utils/api' // Import API langsung
+import { api } from '@/utils/api'
 
 export const useAmalanStore = defineStore('amalan', () => {
   // State
@@ -44,7 +44,6 @@ export const useAmalanStore = defineStore('amalan', () => {
         year: currentYear.value 
       })
       
-      // 🔧 FIX: Gunakan signature asli (individual parameters)
       const response = await api.getDashboardStats(
         currentWeek.value, 
         currentMonth.value, 
@@ -54,7 +53,6 @@ export const useAmalanStore = defineStore('amalan', () => {
       console.log('📊 Dashboard response:', response)
 
       if (response) {
-        // Map response data structure dari GAS
         dashboardData.value = response
         console.log('✅ Dashboard data loaded successfully')
       } else {
@@ -64,7 +62,7 @@ export const useAmalanStore = defineStore('amalan', () => {
       console.error('💥 Dashboard data load error:', error)
       // Set fallback data structure
       dashboardData.value = {
-        ...Object.fromEntries(MEMBERS.map(member => [member, { totalAmalan: 0, completedAmalan: 0 }])),
+        ...Object.fromEntries(MEMBERS.map(member => [member, { totalAmalan: 0, completedAmalan: 0, hariHalangan: 0 }])),
         stats: { totalAmalan: 0, avgAmalan: 0, topMember: '-' },
         recentActivity: []
       }
@@ -79,12 +77,10 @@ export const useAmalanStore = defineStore('amalan', () => {
       isLoading.value = true
       console.log('👤 Loading member data for:', member)
       
-      // 🔧 VALIDATION: Pastikan member valid
       if (!MEMBERS.includes(member)) {
         throw new Error(`Invalid member: ${member}`)
       }
       
-      // 🔧 FIX: Gunakan signature asli (individual parameters)
       const response = await api.getWeeklyData(
         member,
         currentWeek.value,
@@ -109,6 +105,7 @@ export const useAmalanStore = defineStore('amalan', () => {
         month: currentMonth.value,
         year: currentYear.value,
         amalan: {},
+        hariHalangan: 0,  // ✅ TAMBAH: Default hari halangan
         lastUpdate: null
       }
       throw error
@@ -117,25 +114,38 @@ export const useAmalanStore = defineStore('amalan', () => {
     }
   }
 
+  // ✅ FIXED: Update validation untuk support Hari Halangan
   async function updateMemberAmalan(member, amalanName, jumlah) {
     try {
       console.log('💾 Updating amalan:', { member, amalanName, jumlah })
       
-      // 🔧 VALIDATION: Pastikan parameter valid
+      // Validate member
       if (!MEMBERS.includes(member)) {
         throw new Error(`Invalid member: ${member}`)
       }
       
-      if (!DEFAULT_AMALAN.includes(amalanName)) {
+      // ✅ FIXED: Include Hari Halangan dalam validasi
+      const validAmalanNames = [...DEFAULT_AMALAN, HARI_HALANGAN.FIELD_NAME]
+      if (!validAmalanNames.includes(amalanName)) {
+        console.error('❌ Invalid amalan name:', amalanName)
+        console.error('Valid amalan names:', validAmalanNames)
         throw new Error(`Invalid amalan: ${amalanName}`)
       }
       
       const numericValue = parseInt(jumlah) || 0
-      if (numericValue < 0) {
-        throw new Error('Jumlah amalan tidak boleh negatif')
+      
+      // ✅ ADDED: Special validation untuk Hari Halangan
+      if (amalanName === HARI_HALANGAN.FIELD_NAME) {
+        if (numericValue < 0 || numericValue > HARI_HALANGAN.MAX_DAYS) {
+          throw new Error(`Hari Halangan harus antara 0-${HARI_HALANGAN.MAX_DAYS} hari`)
+        }
+      } else {
+        // Normal amalan validation
+        if (numericValue < 0) {
+          throw new Error('Jumlah amalan tidak boleh negatif')
+        }
       }
       
-      // 🔧 FIX: Gunakan signature asli (individual parameters)
       const response = await api.updateAmalan(
         member,
         amalanName,
@@ -150,12 +160,19 @@ export const useAmalanStore = defineStore('amalan', () => {
       if (response) {
         // Update local member data
         if (!memberData.value[member]) {
-          memberData.value[member] = { amalan: {} }
+          memberData.value[member] = { amalan: {}, hariHalangan: 0 }
         }
-        if (!memberData.value[member].amalan) {
-          memberData.value[member].amalan = {}
+        
+        // ✅ UPDATED: Handle hari halangan terpisah
+        if (amalanName === HARI_HALANGAN.FIELD_NAME) {
+          memberData.value[member].hariHalangan = numericValue
+        } else {
+          if (!memberData.value[member].amalan) {
+            memberData.value[member].amalan = {}
+          }
+          memberData.value[member].amalan[amalanName] = numericValue
         }
-        memberData.value[member].amalan[amalanName] = numericValue
+        
         memberData.value[member].lastUpdate = new Date().toISOString()
 
         // Refresh dashboard data untuk update stats
@@ -176,7 +193,6 @@ export const useAmalanStore = defineStore('amalan', () => {
       isLoading.value = true
       console.log('📊 Loading monthly report for:', { month, year })
       
-      // 🔧 FIX: Gunakan signature asli (individual parameters)
       const response = await api.getMonthlyReport(
         month || currentMonth.value,
         year || currentYear.value
@@ -245,7 +261,6 @@ export const useAmalanStore = defineStore('amalan', () => {
     console.log('📅 Week navigation to:', { week: newWeek, month: newMonth, year: newYear })
   }
 
-  // 🆕 NEW: Sync method
   async function syncData() {
     try {
       console.log('🔄 Starting data sync...')
@@ -271,6 +286,16 @@ export const useAmalanStore = defineStore('amalan', () => {
     }
   }
 
+  // ✅ NEW: Helper methods untuk validation
+  function isValidAmalanName(amalanName) {
+    const validAmalanNames = [...DEFAULT_AMALAN, HARI_HALANGAN.FIELD_NAME]
+    return validAmalanNames.includes(amalanName)
+  }
+
+  function getValidAmalanNames() {
+    return [...DEFAULT_AMALAN, HARI_HALANGAN.FIELD_NAME]
+  }
+
   // Debug function
   function debugState() {
     console.log('🐛 Amalan Store Debug:')
@@ -284,6 +309,7 @@ export const useAmalanStore = defineStore('amalan', () => {
     console.log('Monthly Report:', monthlyReportData.value)
     console.log('Is Loading:', isLoading.value)
     console.log('Weekly Stats:', weeklyStats.value)
+    console.log('Valid Amalan Names:', getValidAmalanNames())  // ✅ ADDED
   }
 
   return {
@@ -308,6 +334,8 @@ export const useAmalanStore = defineStore('amalan', () => {
     setCurrentWeek,
     changeWeek,
     syncData,
-    debugState
+    debugState,
+    isValidAmalanName,  // ✅ NEW helper
+    getValidAmalanNames  // ✅ NEW helper
   }
 })

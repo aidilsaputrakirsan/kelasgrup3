@@ -1,4 +1,4 @@
-<!-- 📄 src/views/ReportView.vue - UPDATED WITH FAMILY PERCENTAGE -->
+<!-- 📄 src/views/ReportView.vue - UPDATED WITH HARI HALANGAN SUPPORT -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
     <!-- Header -->
@@ -75,7 +75,7 @@
         </div>
       </div>
       
-      <!-- ✅ UPDATED: Single Family Progress Card -->
+      <!-- Single Family Progress Card -->
       <div class="flex justify-center">
         <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl p-6 text-white text-center shadow-xl max-w-sm w-full">
           <div class="text-4xl font-bold mb-2">{{ familyProgressPercentage }}%</div>
@@ -87,7 +87,7 @@
         </div>
       </div>
       
-      <!-- Tabel Data Amalan - TETAP SAMA -->
+      <!-- Tabel Data Amalan -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span>📋</span> Tabel Data Amalan
@@ -134,6 +134,28 @@
           </table>
         </div>
         
+        <!-- ✅ NEW: Hari Halangan Info Section -->
+        <details class="mt-4">
+          <summary class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 flex items-center gap-2">
+            <span>🌙</span>
+            Info Hari Halangan ({{ totalHariHalangan }} hari total bulan ini)
+          </summary>
+          <div class="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="text-xs text-gray-700 mb-3">
+              <strong>📋 Context untuk Ustadzah:</strong> Data hari halangan membantu memahami kondisi khusus yang mempengaruhi amalan.
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div v-for="item in hariHalanganSummary" :key="item.member" class="flex justify-between bg-white p-2 rounded border">
+                <span class="font-medium">{{ item.member }}:</span>
+                <span :class="item.days > 0 ? 'text-purple-600' : 'text-gray-500'">{{ item.days }} hari</span>
+              </div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-gray-300 text-xs text-gray-500">
+              💡 Hari halangan tidak masuk perhitungan progress amalan, hanya untuk context.
+            </div>
+          </div>
+        </details>
+        
         <!-- Info note -->
         <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
           <div class="text-xs text-amber-700">
@@ -151,7 +173,7 @@
         
         <div class="space-y-3">
           <div class="text-sm text-gray-600 mb-4">
-            Export laporan dengan analisis persentase progress amalan per member
+            Export laporan lengkap dengan analisis persentase progress amalan dan info hari halangan per member
           </div>
           
           <AppButton
@@ -168,7 +190,7 @@
         </div>
       </div>
       
-      <!-- Top Performers - UPDATED dengan percentage -->
+      <!-- Top Performers -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <div class="flex justify-between items-start mb-4">
           <h3 class="font-bold text-gray-800 flex items-center gap-2">
@@ -253,6 +275,12 @@
                 <span class="text-gray-700">{{ getMemberTopRoutine(member).name }}</span>
                 <span class="font-medium text-gray-600">{{ getMemberTopRoutine(member).frequency }}</span>
               </div>
+              
+              <!-- ✅ NEW: Hari halangan info per member -->
+              <div v-if="getMemberHariHalangan(member) > 0" class="flex justify-between text-xs bg-purple-50 rounded-lg px-3 py-2 border border-purple-200">
+                <span class="text-purple-700">🌙 Hari halangan:</span>
+                <span class="font-medium text-purple-600">{{ getMemberHariHalangan(member) }} hari</span>
+              </div>
             </div>
           </div>
         </div>
@@ -312,7 +340,7 @@ const selectedYear = ref(getCurrentYear())
 const isLoading = ref(false)
 const isExporting = ref(false)
 
-// 🎯 DYNAMIC TARGETS dari AMALAN_CONFIG
+// Dynamic targets dari AMALAN_CONFIG
 const amalanTargets = computed(() => {
   const targets = {}
   Object.entries(AMALAN_CONFIG).forEach(([amalan, config]) => {
@@ -335,7 +363,20 @@ const yearRange = computed(() => {
   return Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
 })
 
-// ✅ NEW: Family Progress Percentage
+// ✅ NEW: Hari Halangan computed properties
+const hariHalanganSummary = computed(() => {
+  const data = amalanStore.monthlyReportData?.amalan?.['Hari Halangan'] || {}
+  return MEMBERS.map(member => ({
+    member,
+    days: data[member] || 0
+  }))
+})
+
+const totalHariHalangan = computed(() => 
+  hariHalanganSummary.value.reduce((sum, item) => sum + item.days, 0)
+)
+
+// Family Progress Percentage
 const familyProgressPercentage = computed(() => {
   const reportData = amalanStore.monthlyReportData
   
@@ -357,7 +398,7 @@ const familyProgressInsight = computed(() => {
   return 'Mari mulai konsisten beramalan 📿'
 })
 
-// ✅ UPDATED: Top Consistent Members berdasarkan progress %
+// Top Consistent Members berdasarkan progress %
 const topConsistentMembers = computed(() => {
   const members = MEMBERS.map(member => {
     const progress = calculateMemberProgress(member)
@@ -390,7 +431,7 @@ function calculateMemberProgress(memberName) {
     
     if (monthlyTarget === 0) return 0
     
-    // ✅ CAP AT 100% per amalan (excess = sedekah)
+    // CAP AT 100% per amalan (excess = sedekah)
     const progress = Math.min((achieved / monthlyTarget) * 100, 100)
     return progress
   })
@@ -411,6 +452,9 @@ function getMemberActiveTypes(member) {
   
   let activeTypes = 0
   Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    // Skip hari halangan dari active types count
+    if (amalanName === 'Hari Halangan') return
+    
     const memberValue = amalanData[member] || 0
     if (memberValue > 0) {
       activeTypes++
@@ -427,6 +471,9 @@ function getMemberTotalAmalan(member) {
   
   let total = 0
   Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    // Skip hari halangan dari total count
+    if (amalanName === 'Hari Halangan') return
+    
     total += amalanData[member] || 0
   })
   
@@ -444,6 +491,9 @@ function getMemberTopRoutine(member) {
   let maxPercentage = 0
   
   Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    // Skip hari halangan dari top routine
+    if (amalanName === 'Hari Halangan') return
+    
     const memberValue = amalanData[member] || 0
     const weeklyTarget = amalanWeeklyTargets.value[amalanName] || 1
     const monthlyTarget = weeklyTarget * 4
@@ -463,6 +513,12 @@ function getMemberTopRoutine(member) {
     name: topAmalan,
     frequency: displayPercentage
   }
+}
+
+// ✅ NEW: Helper untuk hari halangan
+function getMemberHariHalangan(member) {
+  const data = amalanStore.monthlyReportData?.amalan?.['Hari Halangan'] || {}
+  return data[member] || 0
 }
 
 function getAmalanValue(amalanName, memberName) {
@@ -502,11 +558,11 @@ function getProgressColor(index) {
   return colors[index] || colors[3]
 }
 
-// ✅ UPDATED: Export Excel dengan Member Total Percentage
+// ✅ UPDATED: Export Excel dengan Hari Halangan support
 async function exportToExcel() {
   try {
     isExporting.value = true
-    console.log('🎨 Creating beautiful Excel with member percentage analysis...')
+    console.log('🎨 Creating beautiful Excel with hari halangan support...')
     
     const ExcelJS = (await import('exceljs')).default
     
@@ -544,11 +600,18 @@ async function exportToExcel() {
           total: Object.values(sampleData).reduce((sum, val) => sum + val, 0)
         }
       })
+      
+      // Add sample hari halangan data
+      const hariHalanganSample = {}
+      MEMBERS.forEach(member => {
+        hariHalanganSample[member] = Math.floor(Math.random() * 4) // 0-3 hari
+      })
+      amalanData['Hari Halangan'] = hariHalanganSample
     }
     
     const monthName = getMonthName(selectedMonth.value)
     
-    // 🎨 CREATE BEAUTIFUL WORKBOOK
+    // CREATE BEAUTIFUL WORKBOOK
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet(`📊 Laporan ${monthName}`, {
       properties: { 
@@ -556,7 +619,7 @@ async function exportToExcel() {
       }
     })
     
-    // ... [STYLING DEFINITIONS SAME AS BEFORE] ...
+    // STYLING DEFINITIONS
     const headerStyle = {
       font: { 
         name: 'Calibri', 
@@ -608,7 +671,7 @@ async function exportToExcel() {
     const totalCols = 2 + MEMBERS.length
     const lastCol = String.fromCharCode(64 + totalCols)
 
-    // 📍 HEADER SECTION (same as before)
+    // HEADER SECTION
     worksheet.mergeCells(`A1:${lastCol}1`)
     worksheet.getCell('A1').value = '📊 LAPORAN AMALAN HARIAN'
     worksheet.getCell('A1').style = headerStyle
@@ -651,7 +714,7 @@ async function exportToExcel() {
     worksheet.getRow(4).height = 10
     worksheet.getRow(5).height = 10
     
-    // 🏆 TABLE HEADER - Row 6
+    // TABLE HEADER - Row 6
     const headers = ['📋 NAMA AMALAN', '🎯 TARGET', ...MEMBERS.map(m => `🧕 ${m}`)]
     const headerColors = ['FF10B981', 'FFF59E0B', ...MEMBERS.map(() => 'FF3B82F6')]
     
@@ -669,20 +732,19 @@ async function exportToExcel() {
     })
     worksheet.getRow(6).height = 25
     
-    // 📊 DATA ROWS - Starting from row 7
+    // DATA ROWS - Starting from row 7
     let currentRow = 7
     DEFAULT_AMALAN.forEach((amalan, index) => {
       const data = amalanData[amalan] || {}
       const target = amalanTargets.value[amalan] || '-'
-      const memberValues = MEMBERS.map(member => data[member] || 0)
       
       const row = worksheet.getRow(currentRow)
       
       // Set values
       row.getCell(1).value = amalan
       row.getCell(2).value = target
-      MEMBERS.forEach((member, index) => {
-        row.getCell(3 + index).value = data[member] || 0
+      MEMBERS.forEach((member, memberIndex) => {
+        row.getCell(3 + memberIndex).value = data[member] || 0
       })
       
       // Styling per cell
@@ -738,9 +800,58 @@ async function exportToExcel() {
       currentRow++
     })
     
-    // ✅ NEW: MEMBER TOTAL PERCENTAGE ROW
+    // ✅ NEW: HARI HALANGAN ROW
     currentRow += 1
     
+    // Hari Halangan header
+    worksheet.getCell(currentRow, 1).value = '🌙 HARI HALANGAN'
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } },
+      alignment: { horizontal: 'left', vertical: 'middle' },
+      border: {
+        top: { style: 'medium' },
+        left: { style: 'medium' },
+        bottom: { style: 'medium' },
+        right: { style: 'medium' }
+      }
+    }
+    
+    worksheet.getCell(currentRow, 2).value = 'Context'
+    worksheet.getCell(currentRow, 2).style = {
+      font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } },
+      alignment: { horizontal: 'center', vertical: 'middle' },
+      border: {
+        top: { style: 'medium' },
+        left: { style: 'medium' },
+        bottom: { style: 'medium' },
+        right: { style: 'medium' }
+      }
+    }
+    
+    // Hari halangan values
+    MEMBERS.forEach((member, index) => {
+      const hariHalanganValue = amalanData['Hari Halangan']?.[member] || 0
+      
+      worksheet.getCell(currentRow, 3 + index).value = `${hariHalanganValue} hari`
+      worksheet.getCell(currentRow, 3 + index).style = {
+        font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } },
+        alignment: { horizontal: 'center', vertical: 'middle' },
+        border: {
+          top: { style: 'medium' },
+          left: { style: 'medium' },
+          bottom: { style: 'medium' },
+          right: { style: 'medium' }
+        }
+      }
+    })
+    
+    worksheet.getRow(currentRow).height = 25
+    currentRow += 2
+    
+    // MEMBER TOTAL PERCENTAGE ROW
     // Header untuk member totals
     worksheet.getCell(currentRow, 1).value = '👥 TOTAL MEMBER (%)'
     worksheet.getCell(currentRow, 1).style = {
@@ -789,7 +900,47 @@ async function exportToExcel() {
     worksheet.getRow(currentRow).height = 25
     currentRow += 4
     
-    // 📈 SUMMARY SECTION
+    // ✅ NEW: HARI HALANGAN SUMMARY SECTION
+    worksheet.getCell(currentRow, 1).value = '🌙 INFO HARI HALANGAN'
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } },
+      alignment: { horizontal: 'left', vertical: 'middle' }
+    }
+    worksheet.mergeCells(`A${currentRow}:${lastCol}${currentRow}`)
+    worksheet.getRow(currentRow).height = 25
+    
+    currentRow += 2
+    
+    // Hari halangan summary text
+    const hariHalanganTotal = Object.values(amalanData['Hari Halangan'] || {}).reduce((sum, val) => sum + (val || 0), 0)
+    const hariHalanganText = MEMBERS.map(member => {
+      const days = amalanData['Hari Halangan']?.[member] || 0
+      return `${member}: ${days} hari`
+    }).join(' | ')
+    
+    worksheet.getCell(currentRow, 1).value = `📊 BREAKDOWN: ${hariHalanganText}`
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF6B21A8' } }
+    }
+    worksheet.mergeCells(`A${currentRow}:${lastCol}${currentRow}`)
+    currentRow++
+    
+    worksheet.getCell(currentRow, 1).value = `📈 TOTAL: ${hariHalanganTotal} hari halangan bulan ini`
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF6B21A8' } }
+    }
+    worksheet.mergeCells(`A${currentRow}:${lastCol}${currentRow}`)
+    currentRow++
+    
+    worksheet.getCell(currentRow, 1).value = '💡 CONTEXT: Data membantu ustadzah memahami kondisi khusus yang mempengaruhi amalan'
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF6B7280' } }
+    }
+    worksheet.mergeCells(`A${currentRow}:${lastCol}${currentRow}`)
+    currentRow += 3
+    
+    // SUMMARY SECTION
     worksheet.getCell(currentRow, 1).value = '📈 RINGKASAN LAPORAN'
     worksheet.getCell(currentRow, 1).style = {
       font: { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } },
@@ -817,7 +968,7 @@ async function exportToExcel() {
     }
     currentRow += 2
     
-    // 📋 NOTES SECTION  
+    // NOTES SECTION  
     worksheet.getCell(currentRow, 1).value = '📋 CATATAN:'
     worksheet.getCell(currentRow, 1).style = {
       font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } },
@@ -829,6 +980,7 @@ async function exportToExcel() {
       useRealData ? '✅ Data real dari database' : '⚠️ Data sample untuk testing',
       '📊 Progress Member = rata-rata pencapaian 11 jenis amalan',
       '🎯 Maksimal 100% per amalan (excess = sedekah)',
+      '🌙 Hari halangan TIDAK masuk perhitungan progress',
       '💡 Hijau = ada progress, Abu-abu = belum ada data'
     ]
     
@@ -840,15 +992,15 @@ async function exportToExcel() {
       currentRow++
     })
     
-    // 📐 SET COLUMN WIDTHS
+    // SET COLUMN WIDTHS
     worksheet.getColumn(1).width = 40 // Nama Amalan
     worksheet.getColumn(2).width = 15 // Target
     MEMBERS.forEach((member, index) => {
-      worksheet.getColumn(3 + index).width = 10 // Member columns
+      worksheet.getColumn(3 + index).width = 12 // Member columns
     })
     
-    // 💾 DOWNLOAD FILE
-    const fileName = `📊 Laporan_Amalan_${monthName}_${selectedYear.value}_with_Progress.xlsx`
+    // DOWNLOAD FILE
+    const fileName = `📊 Laporan_Amalan_${monthName}_${selectedYear.value}_with_HariHalangan.xlsx`
     
     // Create buffer and download
     const buffer = await workbook.xlsx.writeBuffer()
@@ -864,8 +1016,8 @@ async function exportToExcel() {
     link.click()
     window.URL.revokeObjectURL(url)
     
-    console.log('✨ Excel export with member progress completed successfully')
-    uiStore.showToast('✨ Berhasil export Excel dengan analisis progress!', 'success')
+    console.log('✨ Excel export with hari halangan completed successfully')
+    uiStore.showToast('✨ Berhasil export Excel dengan info hari halangan!', 'success')
     
   } catch (error) {
     console.error('❌ Excel export error:', error)
@@ -883,7 +1035,7 @@ function calculateMemberProgressForExport(memberName, amalanData) {
     
     if (monthlyTarget === 0) return 0
     
-    // ✅ CAP AT 100% per amalan (excess = sedekah)
+    // CAP AT 100% per amalan (excess = sedekah)
     const progress = Math.min((achieved / monthlyTarget) * 100, 100)
     return progress
   })

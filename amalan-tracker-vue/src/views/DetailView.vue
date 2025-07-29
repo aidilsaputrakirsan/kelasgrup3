@@ -1,4 +1,4 @@
-<!-- 📱 src/views/DetailView.vue - CLEAN TAILWIND + SAFE LOGIC -->
+<!-- 📱 src/views/DetailView.vue - WITH HARI HALANGAN FEATURE -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
     <!-- Header -->
@@ -144,6 +144,94 @@
         </div>
       </div>
 
+      <!-- ✅ NEW: Hari Halangan Section -->
+      <div class="bg-gray-50/60 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-gray-200/50 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="font-bold text-gray-700 flex items-center gap-2 text-sm sm:text-base">
+              <span>🌙</span> {{ HARI_HALANGAN.FIELD_NAME }}
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">{{ HARI_HALANGAN.DESCRIPTION }}</p>
+          </div>
+          
+          <!-- Save button untuk halangan -->
+          <button
+            v-if="hasUnsavedHalanganChanges"
+            @click="saveHariHalangan"
+            :disabled="isSavingHalangan"
+            class="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 disabled:opacity-50 text-white rounded-lg transition-colors text-xs font-medium min-h-[36px]"
+          >
+            <span v-if="isSavingHalangan" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span v-else>💾</span>
+            <span>{{ isSavingHalangan ? 'Menyimpan...' : 'Simpan' }}</span>
+          </button>
+        </div>
+        
+        <!-- Hari Halangan Input -->
+        <div class="bg-white/70 rounded-xl p-4 border border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                <span class="text-gray-600 text-sm">🌙</span>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">{{ HARI_HALANGAN.FIELD_NAME }}</div>
+                <div class="text-xs text-gray-500">Maksimal {{ HARI_HALANGAN.MAX_DAYS }} hari/pekan</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <!-- Value display -->
+              <div class="text-center">
+                <div class="text-lg font-bold text-gray-600">{{ hariHalanganValue }}</div>
+                <div class="text-xs text-gray-400">hari</div>
+              </div>
+              
+              <!-- Input controls -->
+              <div class="flex flex-col gap-1">
+                <button
+                  @click="adjustHariHalangan(1)"
+                  :disabled="hariHalanganValue >= HARI_HALANGAN.MAX_DAYS"
+                  class="w-8 h-8 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center justify-center text-gray-600 font-bold transition-colors"
+                >
+                  +
+                </button>
+                <button
+                  @click="adjustHariHalangan(-1)"
+                  :disabled="hariHalanganValue <= 0"
+                  class="w-8 h-8 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center justify-center text-gray-600 font-bold transition-colors"
+                >
+                  −
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Status indicator -->
+          <div class="mt-3 pt-3 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-gray-500">
+                Status: 
+                <span :class="hasUnsavedHalanganChanges ? 'text-yellow-600' : 'text-green-600'">
+                  {{ hasUnsavedHalanganChanges ? 'Belum disimpan' : 'Tersimpan' }}
+                </span>
+              </div>
+              <div class="text-xs text-gray-400">
+                Tersimpan: {{ savedHariHalanganValue }} hari
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Info note -->
+        <div class="mt-3 p-3 bg-blue-50/50 rounded-lg border border-blue-200/50">
+          <div class="text-xs text-blue-700">
+            <strong>💡 Catatan:</strong> Hari halangan tidak dihitung dalam total amalan. 
+            Data ini untuk membantu ustadzah memahami kondisi khusus dalam pekan ini.
+          </div>
+        </div>
+      </div>
+
       <!-- Quick Actions -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
@@ -208,7 +296,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAmalanStore } from '@/stores/amalan'
 import { useUiStore } from '@/stores/ui'
-import { DEFAULT_AMALAN } from '@/utils/constants'
+import { DEFAULT_AMALAN, HARI_HALANGAN } from '@/utils/constants'  // ✅ IMPORT HARI_HALANGAN
 import { getMonthName, getWeekRange } from '@/utils/date'
 import AmalanItem from '@/components/features/amalan/AmalanItem.vue'
 import { MEMBERS } from '@/utils/constants'
@@ -223,7 +311,12 @@ const member = ref(route.params.member)
 const amalanValues = ref({})
 const savedAmalanValues = ref({}) // 🔒 SAFE: Data yang sudah tersimpan
 const isSaving = ref(false)
-const savingStates = ref({}) // 🆕 Track individual saving states
+const savingStates = ref({}) // Track individual saving states
+
+// ✅ NEW: Hari Halangan state
+const hariHalanganValue = ref(0)
+const savedHariHalanganValue = ref(0)
+const isSavingHalangan = ref(false)
 
 // Computed
 const weekRangeText = computed(() => {
@@ -236,15 +329,19 @@ const monthYear = computed(() => {
   return `${getMonthName(amalanStore.currentMonth)} ${amalanStore.currentYear}`
 })
 
+// ✅ UPDATE: Total amalan EXCLUDE hari halangan
 const totalAmalan = computed(() => {
   return Object.values(amalanValues.value).reduce((sum, val) => sum + (val || 0), 0)
+  // Hari halangan TIDAK masuk dalam total
 })
 
+// ✅ UPDATE: Completed amalan EXCLUDE hari halangan
 const completedAmalan = computed(() => {
   return Object.values(amalanValues.value).filter(val => val > 0).length
+  // Hari halangan TIDAK masuk dalam completed count
 })
 
-// 🔒 SAFE: Check if there are unsaved changes
+// 🔒 SAFE: Check if there are unsaved changes (amalan only)
 const hasUnsavedChanges = computed(() => {
   for (const amalan of DEFAULT_AMALAN) {
     const current = amalanValues.value[amalan] || 0
@@ -256,15 +353,25 @@ const hasUnsavedChanges = computed(() => {
   return false
 })
 
+// ✅ NEW: Check unsaved halangan changes
+const hasUnsavedHalanganChanges = computed(() => {
+  return hariHalanganValue.value !== savedHariHalanganValue.value
+})
+
 // Methods
 async function loadMemberData() {
   try {
     await amalanStore.loadMemberData(member.value)
     const memberData = amalanStore.memberData[member.value]
+    
     if (memberData && memberData.amalan) {
-      // Set both current and saved values
+      // Set amalan values
       amalanValues.value = { ...memberData.amalan }
       savedAmalanValues.value = { ...memberData.amalan }
+      
+      // ✅ NEW: Set hari halangan value
+      hariHalanganValue.value = memberData.hariHalangan || 0
+      savedHariHalanganValue.value = memberData.hariHalangan || 0
     } else {
       // Initialize empty
       const emptyData = {}
@@ -273,6 +380,10 @@ async function loadMemberData() {
       })
       amalanValues.value = emptyData
       savedAmalanValues.value = { ...emptyData }
+      
+      // ✅ NEW: Initialize hari halangan
+      hariHalanganValue.value = 0
+      savedHariHalanganValue.value = 0
     }
     
     // Initialize saving states
@@ -291,7 +402,42 @@ function updateAmalanValue(amalanName, value) {
   amalanValues.value[amalanName] = parseInt(value) || 0
 }
 
-// 🆕 Individual save per amalan - instant feedback
+// ✅ NEW: Adjust hari halangan dengan validation
+function adjustHariHalangan(delta) {
+  const newValue = hariHalanganValue.value + delta
+  
+  if (newValue >= 0 && newValue <= HARI_HALANGAN.MAX_DAYS) {
+    hariHalanganValue.value = newValue
+  }
+}
+
+// ✅ NEW: Save hari halangan
+async function saveHariHalangan() {
+  try {
+    isSavingHalangan.value = true
+    
+    // Validation
+    if (hariHalanganValue.value < 0 || hariHalanganValue.value > HARI_HALANGAN.MAX_DAYS) {
+      uiStore.showToast(`Hari halangan harus antara 0-${HARI_HALANGAN.MAX_DAYS} hari`, 'error')
+      return
+    }
+    
+    // Call API dengan "Hari Halangan" sebagai amalanName
+    await amalanStore.updateMemberAmalan(member.value, HARI_HALANGAN.FIELD_NAME, hariHalanganValue.value)
+    
+    // Update saved value after successful save
+    savedHariHalanganValue.value = hariHalanganValue.value
+    
+    uiStore.showToast('Hari halangan berhasil disimpan', 'success')
+  } catch (error) {
+    console.error('❌ Save hari halangan error:', error)
+    uiStore.showToast('Gagal menyimpan hari halangan', 'error')
+  } finally {
+    isSavingHalangan.value = false
+  }
+}
+
+// Individual save per amalan - instant feedback
 async function saveIndividualAmalan(amalanName) {
   try {
     savingStates.value[amalanName] = true
@@ -310,12 +456,12 @@ async function saveIndividualAmalan(amalanName) {
   }
 }
 
-// 🧠 Smart save all - hanya yang berubah
+// 🧠 Smart save all - hanya yang berubah (amalan only, exclude halangan)
 async function saveAllChangedAmalan() {
   try {
     isSaving.value = true
     
-    // 🎯 INTELLIGENT DIFF: Cari yang berubah aja
+    // 🎯 INTELLIGENT DIFF: Cari yang berubah aja (amalan only)
     const changedAmalan = []
     for (const amalan of DEFAULT_AMALAN) {
       const current = amalanValues.value[amalan] || 0
@@ -326,7 +472,7 @@ async function saveAllChangedAmalan() {
     }
     
     if (changedAmalan.length === 0) {
-      uiStore.showToast('Tidak ada perubahan untuk disimpan', 'info')
+      uiStore.showToast('Tidak ada perubahan amalan untuk disimpan', 'info')
       return
     }
     
@@ -354,30 +500,56 @@ async function saveAllChangedAmalan() {
   }
 }
 
-// 🔒 SAFE: Undo to last saved state
+// 🔒 SAFE: Undo to last saved state (include halangan)
 function undoAllChanges() {
+  const hasAmalanChanges = hasUnsavedChanges.value
+  const hasHalanganChanges = hasUnsavedHalanganChanges.value
+  
+  if (!hasAmalanChanges && !hasHalanganChanges) {
+    uiStore.showToast('Tidak ada perubahan untuk dibatalkan', 'info')
+    return
+  }
+  
   if (confirm('Yakin ingin membatalkan semua perubahan yang belum disimpan?')) {
-    amalanValues.value = { ...savedAmalanValues.value }
-    uiStore.showToast('Perubahan dibatalkan', 'info')
+    // Undo amalan changes
+    if (hasAmalanChanges) {
+      amalanValues.value = { ...savedAmalanValues.value }
+    }
+    
+    // ✅ NEW: Undo halangan changes
+    if (hasHalanganChanges) {
+      hariHalanganValue.value = savedHariHalanganValue.value
+    }
+    
+    uiStore.showToast('Semua perubahan dibatalkan', 'info')
   }
 }
 
 // 🗑️ DANGEROUS: Reset to zero (with extra confirmation)
 function resetToZero() {
-  const message = hasUnsavedChanges.value 
-    ? 'PERINGATAN: Ini akan menghapus SEMUA amalan termasuk yang sudah disimpan! Yakin ingin reset ke nol?'
-    : 'Yakin ingin reset semua amalan ke nol?'
+  const hasChanges = hasUnsavedChanges.value || hasUnsavedHalanganChanges.value
+  
+  const message = hasChanges 
+    ? 'PERINGATAN: Ini akan menghapus SEMUA data termasuk yang sudah disimpan! Yakin ingin reset ke nol?'
+    : 'Yakin ingin reset semua data ke nol?'
     
   if (confirm(message)) {
+    // Reset amalan
     Object.keys(amalanValues.value).forEach(key => {
       amalanValues.value[key] = 0
     })
+    
+    // ✅ NEW: Reset hari halangan
+    hariHalanganValue.value = 0
+    
     uiStore.showToast('Reset ke nol, jangan lupa simpan jika diinginkan', 'warning')
   }
 }
 
 async function changeWeek(direction) {
-  if (hasUnsavedChanges.value) {
+  const hasChanges = hasUnsavedChanges.value || hasUnsavedHalanganChanges.value
+  
+  if (hasChanges) {
     if (!confirm('Ada perubahan yang belum disimpan. Lanjutkan?')) {
       return
     }
@@ -415,9 +587,9 @@ watch(() => route.params.member, (newMember) => {
   }
 })
 
-// 🔒 SAFE: Warn before leaving with unsaved changes
+// 🔒 SAFE: Warn before leaving with unsaved changes (include halangan)
 window.addEventListener('beforeunload', (e) => {
-  if (hasUnsavedChanges.value) {
+  if (hasUnsavedChanges.value || hasUnsavedHalanganChanges.value) {
     e.preventDefault()
     e.returnValue = 'Ada perubahan yang belum disimpan'
   }
