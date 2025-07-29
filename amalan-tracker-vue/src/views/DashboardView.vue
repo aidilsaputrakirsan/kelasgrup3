@@ -104,7 +104,7 @@
         
         <!-- Loading state untuk members -->
         <div v-if="isLoadingMembers" class="grid grid-cols-2 gap-3 sm:gap-4">
-          <div v-for="i in 4" :key="i" class="h-48 bg-gray-200 rounded-2xl animate-pulse"></div>
+          <div v-for="i in MEMBERS.length" :key="i" class="h-48 bg-gray-200 rounded-xl animate-pulse"></div>
         </div>
         
         <!-- Member cards with error handling -->

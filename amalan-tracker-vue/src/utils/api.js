@@ -1,5 +1,6 @@
 // 📄 src/utils/api.js - FIXED VERSION (Backward Compatible)
 import { API_CONFIG } from './constants'
+import { MEMBERS } from './constants'
 
 class AmalanAPI {
   constructor() {
@@ -195,7 +196,7 @@ class AmalanAPI {
     console.log('📋 getWeeklyData called with:', { member, week, month, year })
     
     // 🔧 VALIDATION: Pastikan member valid
-    if (!member || !['ATK', 'AYS', 'FTR', 'WIN'].includes(member)) {
+    if (!member || !MEMBERS.includes(member)) {
       throw new Error(`Invalid member: ${member}`)
     }
     
@@ -229,7 +230,7 @@ class AmalanAPI {
     console.log('💾 updateAmalan called with:', { member, amalanName, jumlah, week, month, year })
     
     // 🔧 VALIDATION: Pastikan parameter valid
-    if (!member || !['ATK', 'AYS', 'FTR', 'WIN'].includes(member)) {
+    if (!member || !['ATK', 'AYS', 'FTR', 'WIN', 'HMA'].includes(member)) {
       throw new Error(`Invalid member: ${member}`)
     }
     

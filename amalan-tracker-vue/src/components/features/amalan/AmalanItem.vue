@@ -1,4 +1,4 @@
-<!-- 📱 src/components/features/amalan/AmalanItem.vue - CLEAN TAILWIND + SAFE LOGIC -->
+<!-- 📱 src/components/features/amalan/AmalanItem.vue - DYNAMIC VERSION -->
 <template>
   <div class="glass rounded-xl p-3 sm:p-4 transition-all duration-200 hover:shadow-md">
     <!-- Header -->
@@ -121,6 +121,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { AMALAN_CONFIG } from '@/utils/constants'
 
 const props = defineProps({
   name: {
@@ -145,34 +146,20 @@ const emit = defineEmits(['update', 'save'])
 
 const localValue = ref(props.value.toString())
 
-// 🎯 Dynamic target mapping
-const targetMapping = {
-  'Dzikir pagi/petang': { daily: '1x/hari', weekly: 7 },
-  'Tilawah': { daily: '1 juz/hari', weekly: 7 },
-  'Shalat tepat waktu': { daily: '5x/hari', weekly: 35 },
-  'Shalat malam': { daily: '3x/pekan', weekly: 3 },
-  'Shalat Dhuha': { daily: '3x/pekan', weekly: 3 },
-  'Puasa Sunnah': { daily: '3x/pekan', weekly: 3 },
-  'Istighfar': { daily: '100x/hari', weekly: 700 },
-  'Shalawat': { daily: '100x/hari', weekly: 700 },
-  'Membaca Baqiyatush-shalihat': { daily: '10x/hari', weekly: 70 },
-  'Infaq Harian': { daily: '1x/hari', weekly: 7 },
-  'Doa kemenangan dakwah dan umat islam': { daily: '1x/hari', weekly: 7 }
-}
+// 🎯 Dynamic target dari AMALAN_CONFIG
+const targetInfo = computed(() => {
+  const config = AMALAN_CONFIG[props.name]
+  return config ? config.dailyText : '-'
+})
+
+const weeklyTarget = computed(() => {
+  const config = AMALAN_CONFIG[props.name]
+  return config ? config.weeklyTarget : 0
+})
 
 const displayValue = computed(() => {
   const num = parseInt(localValue.value) || 0
   return Math.max(0, Math.min(9999, num))
-})
-
-const targetInfo = computed(() => {
-  const target = targetMapping[props.name]
-  return target ? target.daily : '-'
-})
-
-const weeklyTarget = computed(() => {
-  const target = targetMapping[props.name]
-  return target ? target.weekly : 0
 })
 
 const progressPercentage = computed(() => {
@@ -194,12 +181,9 @@ const hasChanges = computed(() => {
   return displayValue.value !== props.savedValue
 })
 
-// 🚀 Smart quick actions based on amalan type
+// 🚀 Smart quick actions based on amalan type from AMALAN_CONFIG
 const quickActions = computed(() => {
-  const target = targetMapping[props.name]
-  if (!target) return [{ label: '+1', value: 1 }, { label: '+5', value: 5 }]
-  
-  const weekly = target.weekly
+  const weekly = weeklyTarget.value
   
   if (weekly >= 100) {
     // High frequency (Istighfar, Shalawat)
@@ -209,14 +193,14 @@ const quickActions = computed(() => {
       { label: '+100', value: 100 }
     ]
   } else if (weekly >= 10) {
-    // Medium frequency (Shalat tepat waktu, Baqiyatush-shalihat)
+    // Medium frequency (Shalat tepat waktu, dll)
     return [
       { label: '+1', value: 1 },
       { label: '+3', value: 3 },
       { label: '+5', value: 5 }
     ]
   } else {
-    // Low frequency (Shalat malam, Dhuha, Puasa)
+    // Low frequency (Shalat malam, Dhuha, Puasa, Membaca Buku)
     return [
       { label: '+1', value: 1 },
       { label: '+2', value: 2 },

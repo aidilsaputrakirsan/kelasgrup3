@@ -1,4 +1,4 @@
-<!-- 📄 src/components/features/dashboard/MemberCard.vue - IMPROVED -->
+<!-- 📄 src/components/features/dashboard/MemberCard.vue - DYNAMIC VERSION -->
 <template>
   <div
     :class="cardClasses"
@@ -89,7 +89,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { DEFAULT_AMALAN } from '@/utils/constants'
+import { DEFAULT_AMALAN, AMALAN_CONFIG } from '@/utils/constants'
 
 const props = defineProps({
   member: {
@@ -117,25 +117,9 @@ const memberStats = computed(() => ({
   completedAmalan: props.data.completedAmalan || 0
 }))
 
-// 🎯 DYNAMIC weekly target based on actual amalan targets
+// 🎯 DYNAMIC weekly target dari AMALAN_CONFIG
 const weeklyTarget = computed(() => {
-  // Target mapping berdasarkan amalan yang realistic
-  const amalanTargets = {
-    'Dzikir pagi/petang': 7,          // 1x/hari = 7x/week
-    'Tilawah': 7,                     // 1 juz/hari = 7x/week
-    'Shalat tepat waktu': 35,         // 5x/hari = 35x/week
-    'Shalat malam': 3,                // 3x/pekan
-    'Shalat Dhuha': 3,                // 3x/pekan
-    'Puasa Sunnah': 3,                // 3x/pekan
-    'Istighfar': 700,                 // 100x/hari = 700x/week
-    'Shalawat': 700,                  // 100x/hari = 700x/week
-    'Membaca Baqiyatush-shalihat': 70, // 10x/hari = 70x/week
-    'Infaq Harian': 7,                // 1x/hari = 7x/week
-    'Doa kemenangan dakwah dan umat islam': 7 // 1x/hari = 7x/week
-  }
-  
-  // Total target semua amalan
-  return Object.values(amalanTargets).reduce((sum, target) => sum + target, 0) // = 1542
+  return Object.values(AMALAN_CONFIG).reduce((sum, config) => sum + config.weeklyTarget, 0)
 })
 
 // Progress percentage berdasarkan realistic target

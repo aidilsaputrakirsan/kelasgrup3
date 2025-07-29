@@ -1,6 +1,6 @@
 // 📄 src/utils/constants.js - MINIMAL UPDATE (Tambah ini saja)
 
-export const MEMBERS = ['ATK', 'AYS', 'FTR', 'WIN']
+export const MEMBERS = ['ATK', 'AYS', 'FTR', 'WIN', 'HMA']
 
 export const DEFAULT_AMALAN = [
   'Dzikir pagi/petang',
@@ -11,13 +11,13 @@ export const DEFAULT_AMALAN = [
   'Puasa Sunnah',
   'Istighfar',
   'Shalawat',
-  'Membaca Baqiyatush-shalihat',
+  'Membaca Buku',
   'Infaq Harian',
   'Doa kemenangan dakwah dan umat islam'
 ]
 
 export const API_CONFIG = {
-  BASE_URL: 'https://script.google.com/macros/s/AKfycbzGAvCi6chszYzYghXkSMngFBf4gtqUj0SELO_jWWuSFKpehiZ_FLu4h_BT2i0G92FW/exec',
+  BASE_URL: 'https://script.google.com/macros/s/AKfycbxWi7obQu3HU4aB7zTtUpH3N0lg3ozmbfox9Xq1zB0mrChb9NfwpT36SbrCPauI_I60/exec',
   TIMEOUT: 30000,
   RETRY_COUNT: 3,
   RETRY_DELAY: 1000,
@@ -48,4 +48,51 @@ export const ROUTES = {
   DASHBOARD: '/dashboard', 
   DETAIL: '/detail',
   REPORT: '/report'
+}
+
+export const AMALAN_CONFIG = {
+  'Dzikir pagi/petang': { 
+    dailyText: '1x/hari', 
+    weeklyTarget: 7 
+  },
+  'Tilawah': { 
+    dailyText: '1 juz/hari', 
+    weeklyTarget: 7 
+  },
+  'Shalat tepat waktu': { 
+    dailyText: '5x/hari', 
+    weeklyTarget: 35 
+  },
+  'Shalat malam': { 
+    dailyText: '3x/pekan', 
+    weeklyTarget: 3 
+  },
+  'Shalat Dhuha': { 
+    dailyText: '3x/pekan', 
+    weeklyTarget: 3 
+  },
+  'Puasa Sunnah': { 
+    dailyText: '3x/pekan', 
+    weeklyTarget: 3 
+  },
+  'Istighfar': { 
+    dailyText: '100x/hari', 
+    weeklyTarget: 700 
+  },
+  'Shalawat': { 
+    dailyText: '100x/hari', 
+    weeklyTarget: 700 
+  },
+  'Membaca Buku': { 
+    dailyText: '1x/pekan', 
+    weeklyTarget: 1 
+  },
+  'Infaq Harian': { 
+    dailyText: '1x/hari', 
+    weeklyTarget: 7 
+  },
+  'Doa kemenangan dakwah dan umat islam': { 
+    dailyText: '1x/hari', 
+    weeklyTarget: 7 
+  }
 }

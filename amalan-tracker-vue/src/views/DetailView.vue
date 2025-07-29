@@ -211,6 +211,7 @@ import { useUiStore } from '@/stores/ui'
 import { DEFAULT_AMALAN } from '@/utils/constants'
 import { getMonthName, getWeekRange } from '@/utils/date'
 import AmalanItem from '@/components/features/amalan/AmalanItem.vue'
+import { MEMBERS } from '@/utils/constants'
 
 const route = useRoute()
 const router = useRouter()
@@ -388,7 +389,7 @@ async function changeWeek(direction) {
 
 // Lifecycle
 onMounted(async () => {
-  if (!member.value || !['ATK', 'AYS', 'FTR', 'WIN'].includes(member.value)) {
+  if (!member.value || !MEMBERS.includes(member.value)) {
     uiStore.showToast('Anggota tidak valid', 'error')
     router.push('/dashboard')
     return

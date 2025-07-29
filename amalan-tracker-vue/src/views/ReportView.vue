@@ -103,10 +103,13 @@
               <tr class="bg-gradient-to-r from-pink-500 to-purple-600 text-white">
                 <th class="border border-gray-300 px-3 py-2 text-left font-semibold">Nama Amalan</th>
                 <th class="border border-gray-300 px-2 py-2 text-center font-semibold bg-yellow-100 text-gray-800">Target</th>
-                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">ATK</th>
-                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">AYS</th>
-                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">FTR</th>
-                <th class="border border-gray-300 px-2 py-2 text-center font-semibold">WIN</th>
+                <th 
+                  v-for="member in MEMBERS" 
+                  :key="member"
+                  class="border border-gray-300 px-2 py-2 text-center font-semibold"
+                >
+                  {{ member }}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -119,19 +122,15 @@
                   {{ amalan }}
                 </td>
                 <td class="border border-gray-300 px-2 py-2 text-center text-xs bg-yellow-50 text-gray-700 font-medium">
-                  {{ amalanTargets[amalan] || '-' }}
+                  {{ amalanTargets.value[amalan] || '-' }}
                 </td>
-                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'ATK'))">
-                  {{ getAmalanValue(amalan, 'ATK') }}
-                </td>
-                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'AYS'))">
-                  {{ getAmalanValue(amalan, 'AYS') }}
-                </td>
-                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'FTR'))">
-                  {{ getAmalanValue(amalan, 'FTR') }}
-                </td>
-                <td class="border border-gray-300 px-2 py-2 text-center font-semibold" :class="getValueColorClass(getAmalanValue(amalan, 'WIN'))">
-                  {{ getAmalanValue(amalan, 'WIN') }}
+                <td 
+                  v-for="member in MEMBERS" 
+                  :key="member"
+                  class="border border-gray-300 px-2 py-2 text-center font-semibold" 
+                  :class="getValueColorClass(getAmalanValue(amalan, member))"
+                >
+                  {{ getAmalanValue(amalan, member) }}
                 </td>
               </tr>
             </tbody>
@@ -301,7 +300,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAmalanStore } from '@/stores/amalan'
 import { useUiStore } from '@/stores/ui'
-import { MEMBERS, DEFAULT_AMALAN } from '@/utils/constants'
+import { MEMBERS, DEFAULT_AMALAN, AMALAN_CONFIG } from '@/utils/constants'
 import { getMonthName, getCurrentMonth, getCurrentYear } from '@/utils/date'
 import AppButton from '@/components/ui/AppButton.vue'
 // 📦 IMPORT XLSX LIBRARY
@@ -396,20 +395,23 @@ const topPerformers = computed(() => {
   return topConsistentMembers.value
 })
 
-// 🎯 TARGET MAPPING SESUAI GAMBAR
-const amalanTargets = {
-  'Dzikir pagi/petang': '1x/hari',
-  'Tilawah': '1 juz/hari', 
-  'Shalat tepat waktu': '5x/hari',
-  'Shalat malam': '3x/pekan',
-  'Shalat Dhuha': '3x/pekan',
-  'Puasa Sunnah': '3x/pekan',
-  'Istighfar': '100x/hari',
-  'Shalawat': '100x/hari',
-  'Membaca Baqiyatush-shalihat': '10x/hari',
-  'Infaq Harian': '1x/hari',
-  'Doa kemenangan dakwah dan umat islam': '1x/hari'
-}
+// Tambah setelah computed yang sudah ada
+const amalanTargets = computed(() => {
+  const targets = {}
+  Object.entries(AMALAN_CONFIG).forEach(([amalan, config]) => {
+    targets[amalan] = config.dailyText
+  })
+  return targets
+})
+
+const amalanWeeklyTargets = computed(() => {
+  const targets = {}
+  Object.entries(AMALAN_CONFIG).forEach(([amalan, config]) => {
+    targets[amalan] = config.weeklyTarget
+  })
+  return targets
+})
+
 
 async function exportToExcel() {
   try {
@@ -443,7 +445,7 @@ async function exportToExcel() {
           aysVal = Math.floor(Math.random() * 20) + 20
           ftrVal = Math.floor(Math.random() * 20) + 20
           winVal = Math.floor(Math.random() * 20) + 20
-        } else if (amalan.includes('Membaca Baqiyatush-shalihat')) {
+        } else if (amalan.includes('Membaca Buku')) {
           atkVal = Math.floor(Math.random() * 30) + 40
           aysVal = Math.floor(Math.random() * 30) + 40
           ftrVal = Math.floor(Math.random() * 30) + 40
@@ -547,18 +549,21 @@ async function exportToExcel() {
       }
     }
     
+    const totalCols = 2 + MEMBERS.length + 1  // Nama + Target + Members + Total = 8
+    const lastCol = String.fromCharCode(64 + totalCols) // A=65, jadi H=72
+
     // 📍 HEADER SECTION
-    worksheet.mergeCells('A1:G1')
+    worksheet.mergeCells(`A1:${lastCol}1`)
     worksheet.getCell('A1').value = '📊 LAPORAN AMALAN HARIAN'
     worksheet.getCell('A1').style = headerStyle
     worksheet.getRow(1).height = 30
     
-    worksheet.mergeCells('A2:G2')
+    worksheet.mergeCells(`A2:${lastCol}2`)
     worksheet.getCell('A2').value = `📅 Periode: ${monthName} ${selectedYear.value}`
     worksheet.getCell('A2').style = subHeaderStyle
     worksheet.getRow(2).height = 25
     
-    worksheet.mergeCells('A3:G3')
+    worksheet.mergeCells(`A3:${lastCol}3`)
     worksheet.getCell('A3').value = `📄 Tanggal Export: ${new Date().toLocaleDateString('id-ID', {
       weekday: 'long',
       year: 'numeric', 
@@ -589,8 +594,8 @@ async function exportToExcel() {
     worksheet.getRow(5).height = 10
     
     // 🏆 TABLE HEADER - Row 6
-    const headers = ['📋 NAMA AMALAN', '🎯 TARGET', '🧕 ATK', '🧕 AYS', '🧕 FTR', '🧕 WIN', '📊 TOTAL']
-    const headerColors = ['FF10B981', 'FFF59E0B', 'FF3B82F6', 'FF3B82F6', 'FF3B82F6', 'FF3B82F6', 'FFEF4444']
+    const headers = ['📋 NAMA AMALAN', '🎯 TARGET', ...MEMBERS.map(m => `🧕 ${m}`), '📊 TOTAL']
+    const headerColors = ['FF10B981', 'FFF59E0B', ...MEMBERS.map(() => 'FF3B82F6'), 'FFEF4444']
     
     headers.forEach((header, index) => {
       const cell = worksheet.getCell(6, index + 1)
@@ -610,23 +615,19 @@ async function exportToExcel() {
     let currentRow = 7
     DEFAULT_AMALAN.forEach((amalan, index) => {
       const data = amalanData[amalan] || {}
-      const target = amalanTargets[amalan] || '-'
-      const atk = data['ATK'] || 0
-      const ays = data['AYS'] || 0  
-      const ftr = data['FTR'] || 0
-      const win = data['WIN'] || 0
-      const total = atk + ays + ftr + win
+      const target = amalanTargets.value[amalan] || '-'
+      const memberValues = MEMBERS.map(member => data[member] || 0)
+      const total = memberValues.reduce((sum, val) => sum + val, 0)
       
       const row = worksheet.getRow(currentRow)
       
       // Set values
       row.getCell(1).value = amalan
       row.getCell(2).value = target
-      row.getCell(3).value = atk
-      row.getCell(4).value = ays
-      row.getCell(5).value = ftr
-      row.getCell(6).value = win
-      row.getCell(7).value = total
+      MEMBERS.forEach((member, index) => {
+        row.getCell(3 + index).value = data[member] || 0
+      })
+      row.getCell(3 + MEMBERS.length).value = total
       
       // Styling per cell
       const isEven = index % 2 === 0
@@ -659,7 +660,7 @@ async function exportToExcel() {
       }
       
       // Member data (ATK, AYS, FTR, WIN)
-      for (let col = 3; col <= 6; col++) {
+      for (let col = 3; col <= 2 + MEMBERS.length; col++) {
         const value = row.getCell(col).value
         const fontColor = value > 0 ? 'FF059669' : 'FF6B7280'
         const cellBg = value > 0 ? 'FFECFDF5' : bgColor
@@ -678,7 +679,7 @@ async function exportToExcel() {
       }
       
       // Total
-      row.getCell(7).style = {
+      row.getCell(3 + MEMBERS.length).style = {
         font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } },
         fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } },
         alignment: { horizontal: 'center', vertical: 'middle' },
@@ -703,7 +704,7 @@ async function exportToExcel() {
       fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } },
       alignment: { horizontal: 'left', vertical: 'middle' }
     }
-    worksheet.mergeCells(`A${currentRow}:G${currentRow}`)
+    worksheet.mergeCells(`A${currentRow}:${lastCol}${currentRow}`)
     worksheet.getRow(currentRow).height = 25
     
     currentRow += 2
@@ -752,7 +753,7 @@ async function exportToExcel() {
     const notes = [
       useRealData ? '✅ Data real dari database' : '⚠️ Data sample untuk testing',
       '📋 Target menunjukkan frekuensi ideal per amalan',
-      '🎯 Total = ATK + AYS + FTR + WIN',
+      `🎯 Total = ${MEMBERS.join(' + ')}`,
       '💡 Hijau = ada progress, Abu-abu = belum ada data'
     ]
     
@@ -767,11 +768,10 @@ async function exportToExcel() {
     // 📐 SET COLUMN WIDTHS
     worksheet.getColumn(1).width = 40 // Nama Amalan
     worksheet.getColumn(2).width = 15 // Target
-    worksheet.getColumn(3).width = 10 // ATK
-    worksheet.getColumn(4).width = 10 // AYS
-    worksheet.getColumn(5).width = 10 // FTR
-    worksheet.getColumn(6).width = 10 // WIN
-    worksheet.getColumn(7).width = 12 // TOTAL
+    MEMBERS.forEach((member, index) => {
+      worksheet.getColumn(3 + index).width = 10 // Member columns
+    })
+    worksheet.getColumn(3 + MEMBERS.length).width = 12 // TOTAL
     
     // 💾 DOWNLOAD FILE
     const fileName = `📊 Laporan_Amalan_${monthName}_${selectedYear.value}.xlsx`
@@ -825,21 +825,6 @@ async function loadReportData() {
   }
 }
 
-// 🎯 TARGET NUMBERS PER WEEK untuk perhitungan relatif
-const amalanWeeklyTargets = {
-  'Dzikir pagi/petang': 7,          // 1x/hari = 7x/week
-  'Tilawah': 7,                     // 1 juz/hari = 7x/week
-  'Shalat tepat waktu': 35,         // 5x/hari = 35x/week
-  'Shalat malam': 3,                // 3x/pekan
-  'Shalat Dhuha': 3,                // 3x/pekan
-  'Puasa Sunnah': 3,                // 3x/pekan
-  'Istighfar': 700,                 // 100x/hari = 700x/week
-  'Shalawat': 700,                  // 100x/hari = 700x/week
-  'Membaca Baqiyatush-shalihat': 70, // 10x/hari = 70x/week
-  'Infaq Harian': 7,                // 1x/hari = 7x/week
-  'Doa kemenangan dakwah dan umat islam': 7 // 1x/hari = 7x/week
-}
-
 function getMemberActiveTypes(member) {
   const reportData = amalanStore.monthlyReportData
   
@@ -870,7 +855,7 @@ function getMemberTopRoutine(member) {
   
   Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
     const memberValue = amalanData[member] || 0
-    const weeklyTarget = amalanWeeklyTargets[amalanName] || 1
+    const weeklyTarget = amalanWeeklyTargets.value[amalanName] || 1
     
     // Hitung percentage achievement relative to target
     const percentage = (memberValue / weeklyTarget) * 100
@@ -944,3 +929,19 @@ onMounted(async () => {
   await loadReportData()
 })
 </script> 
+<style scoped>
+/* Fix table borders untuk dynamic columns */
+table {
+  border-collapse: collapse !important;
+}
+
+table td,
+table th {
+  border: 1px solid #d1d5db !important;
+}
+
+/* Pastikan text alignment tetap center untuk member columns */
+table td:nth-child(n+3):nth-last-child(n+2) {
+  text-align: center !important;
+}
+</style>
