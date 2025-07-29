@@ -933,6 +933,7 @@ async function exportToExcel() {
     worksheet.mergeCells(`A${currentRow}:${lastCol}${currentRow}`)
     currentRow++
     
+    worksheet.getCell(currentRow, 1).value = '💡 CONTEXT: Data membantu ustadzah memahami kondisi khusus yang mempengaruhi amalan'
     worksheet.getCell(currentRow, 1).style = {
       font: { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF6B7280' } }
     }
