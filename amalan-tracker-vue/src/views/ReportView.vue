@@ -1,4 +1,4 @@
-<!-- 📄 src/views/ReportView.vue - DYNAMIC VERSION -->
+<!-- 📄 src/views/ReportView.vue - UPDATED WITH FAMILY PERCENTAGE -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
     <!-- Header -->
@@ -75,22 +75,19 @@
         </div>
       </div>
       
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl p-6 text-white text-center shadow-xl">
-          <div class="text-3xl font-bold mb-1">{{ reportStats.totalAmalan }}</div>
-          <div class="text-sm opacity-90">Total Amalan</div>
-          <div class="text-xs opacity-75 mt-1">Bulan ini</div>
-        </div>
-        
-        <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white text-center shadow-xl">
-          <div class="text-3xl font-bold mb-1">{{ reportStats.averagePerMember }}</div>
-          <div class="text-sm opacity-90">Rata-rata</div>
-          <div class="text-xs opacity-75 mt-1">Per anggota</div>
+      <!-- ✅ UPDATED: Single Family Progress Card -->
+      <div class="flex justify-center">
+        <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl p-6 text-white text-center shadow-xl max-w-sm w-full">
+          <div class="text-4xl font-bold mb-2">{{ familyProgressPercentage }}%</div>
+          <div class="text-sm opacity-90">Progress Keluarga</div>
+          <div class="text-xs opacity-75 mt-1">Rata-rata amalan bulan ini</div>
+          <div class="text-xs opacity-75 mt-2">
+            {{ familyProgressInsight }}
+          </div>
         </div>
       </div>
       
-      <!-- Tabel Data Amalan - DYNAMIC -->
+      <!-- Tabel Data Amalan - TETAP SAMA -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span>📋</span> Tabel Data Amalan
@@ -154,7 +151,7 @@
         
         <div class="space-y-3">
           <div class="text-sm text-gray-600 mb-4">
-            Export laporan
+            Export laporan dengan analisis persentase progress amalan per member
           </div>
           
           <AppButton
@@ -171,14 +168,14 @@
         </div>
       </div>
       
-      <!-- Top Performers -->
+      <!-- Top Performers - UPDATED dengan percentage -->
       <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-sm">
         <div class="flex justify-between items-start mb-4">
           <h3 class="font-bold text-gray-800 flex items-center gap-2">
             <span>🏆</span> Anggota Terkonsisten
           </h3>
           <div class="text-xs text-gray-500 text-right max-w-[180px]">
-            Berdasarkan berapa jenis amalan yang rutin dilakukan
+            Berdasarkan rata-rata progress amalan
           </div>
         </div>
         
@@ -195,18 +192,18 @@
             <div class="flex-1">
               <div class="font-bold text-gray-800">{{ member.name }}</div>
               <div class="text-sm text-gray-600">{{ member.activeTypes }}/{{ DEFAULT_AMALAN.length }} jenis amalan aktif</div>
-              <div class="text-xs text-gray-500">Konsistensi: {{ member.consistency }}%</div>
+              <div class="text-xs text-gray-500">Progress amalan: {{ member.progress }}%</div>
             </div>
             
             <div class="w-20">
               <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                 <div 
-                  :style="{ width: `${member.percentage}%` }"
+                  :style="{ width: `${member.progress}%` }"
                   :class="getProgressColor(index)"
                   class="h-full rounded-full transition-all duration-1000"
                 ></div>
               </div>
-              <div class="text-xs text-gray-500 text-center mt-1">{{ member.percentage }}%</div>
+              <div class="text-xs text-gray-500 text-center mt-1">{{ member.progress }}%</div>
             </div>
           </div>
         </div>
@@ -214,8 +211,8 @@
         <!-- Info Box -->
         <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
           <div class="text-xs text-blue-700">
-            <strong>💡 Cara Hitung:</strong> Dilihat dari berapa banyak jenis amalan yang dilakukan (bukan total angka). 
-            Contoh: Yang melakukan 8 jenis amalan berbeda lebih konsisten daripada yang cuma fokus 3 jenis tapi total tinggi.
+            <strong>💡 Cara Hitung:</strong> Rata-rata progress per jenis amalan (maksimal 100% per amalan). 
+            Excess amalan dianggap sedekah, tidak masuk hitungan.
           </div>
         </div>
       </div>
@@ -227,7 +224,7 @@
             <span>👥</span> Detail per Anggota
           </h3>
           <div class="text-xs text-gray-500 text-right max-w-[150px]">
-            Amalan terrutin = yang paling sering dilakukan
+            Progress amalan individual
           </div>
         </div>
         
@@ -245,8 +242,8 @@
                 <h4 class="font-bold text-gray-800">{{ member }}</h4>
               </div>
               <div class="text-right">
-                <div class="text-xl font-bold text-pink-600">{{ getMemberActiveTypes(member) }}/{{ DEFAULT_AMALAN.length }}</div>
-                <div class="text-xs text-gray-500">jenis amalan</div>
+                <div class="text-xl font-bold text-pink-600">{{ getMemberProgress(member) }}%</div>
+                <div class="text-xs text-gray-500">progress amalan</div>
               </div>
             </div>
             
@@ -263,8 +260,8 @@
         <!-- Info Box -->
         <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
           <div class="text-xs text-green-700">
-            <strong>💡 Penjelasan:</strong> "Amalan Terrutin" dihitung dari frekuensi relatif per jenis amalan. 
-            Contoh: Shalat 25x lebih rutin daripada Istighfar 100x (karena target Shalat 35x vs Istighfar 700x per pekan).
+            <strong>💡 Penjelasan:</strong> Progress amalan = rata-rata pencapaian dari 11 jenis amalan.
+            Maksimal 100% per amalan, excess dianggap sedekah.
           </div>
         </div>
       </div>
@@ -338,77 +335,178 @@ const yearRange = computed(() => {
   return Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
 })
 
-const reportStats = computed(() => {
+// ✅ NEW: Family Progress Percentage
+const familyProgressPercentage = computed(() => {
   const reportData = amalanStore.monthlyReportData
   
-  if (!reportData || !reportData.summary) {
-    return {
-      totalAmalan: 0,
-      averagePerMember: 0,
-      mostActive: '-'
-    }
-  }
+  if (!reportData || !reportData.amalan) return 0
   
-  return {
-    totalAmalan: reportData.summary.totalAmalan || 0,
-    averagePerMember: reportData.summary.avgPerMember || 0,
-    mostActive: reportData.summary.mostActive || '-'
-  }
+  const memberProgresses = MEMBERS.map(member => calculateMemberProgress(member))
+  const average = memberProgresses.reduce((sum, progress) => sum + progress, 0) / MEMBERS.length
+  
+  return Math.round(average)
 })
 
+const familyProgressInsight = computed(() => {
+  const progress = familyProgressPercentage.value
+  
+  if (progress >= 80) return 'MasyaAllah! Excellence amalan 🏆'
+  if (progress >= 60) return 'Alhamdulillah, progress bagus 🌟'
+  if (progress >= 40) return 'Keep going, momentum membaik 💪'
+  if (progress >= 20) return 'Yuk semangat, mulai membangun 🌱'
+  return 'Mari mulai konsisten beramalan 📿'
+})
+
+// ✅ UPDATED: Top Consistent Members berdasarkan progress %
 const topConsistentMembers = computed(() => {
-  const reportData = amalanStore.monthlyReportData
-  
-  if (!reportData || !reportData.amalan) {
-    return []
-  }
-  
   const members = MEMBERS.map(member => {
-    // Hitung berapa jenis amalan yang aktif (> 0)
-    let activeTypes = 0
-    let totalAmalan = 0
-    
-    Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
-      const memberValue = amalanData[member] || 0
-      if (memberValue > 0) {
-        activeTypes++
-      }
-      totalAmalan += memberValue
-    })
-    
-    // Consistency percentage berdasarkan variety of amalan
-    const consistency = Math.round((activeTypes / DEFAULT_AMALAN.length) * 100)
+    const progress = calculateMemberProgress(member)
+    const activeTypes = getMemberActiveTypes(member)
     
     return {
       name: member,
+      progress: progress,
       activeTypes: activeTypes,
-      totalAmalan: totalAmalan,
-      consistency: consistency
+      totalAmalan: getMemberTotalAmalan(member)
     }
   })
   
-  // Sort berdasarkan active types (consistency), bukan total amalan
-  members.sort((a, b) => {
-    if (b.activeTypes === a.activeTypes) {
-      // Jika sama, baru lihat consistency percentage
-      return b.consistency - a.consistency
-    }
-    return b.activeTypes - a.activeTypes
-  })
+  // Sort berdasarkan progress %
+  members.sort((a, b) => b.progress - a.progress)
   
-  // Calculate percentage berdasarkan TOTAL AMALAN, bukan activeTypes tertinggi
-  const totalAmalanTypes = DEFAULT_AMALAN.length
-  
-  return members.map(member => ({
-    ...member,
-    percentage: Math.round((member.activeTypes / totalAmalanTypes) * 100)
-  }))
+  return members
 })
 
+// Helper Functions
+function calculateMemberProgress(memberName) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan) return 0
+  
+  const progressList = Object.entries(AMALAN_CONFIG).map(([amalanName, config]) => {
+    const achieved = reportData.amalan[amalanName]?.[memberName] || 0
+    const weeklyTarget = config.weeklyTarget
+    const monthlyTarget = weeklyTarget * 4  // Monthly = Weekly × 4
+    
+    if (monthlyTarget === 0) return 0
+    
+    // ✅ CAP AT 100% per amalan (excess = sedekah)
+    const progress = Math.min((achieved / monthlyTarget) * 100, 100)
+    return progress
+  })
+  
+  // Average dari semua progress amalan
+  const average = progressList.reduce((sum, progress) => sum + progress, 0) / progressList.length
+  return Math.round(average)
+}
+
+function getMemberProgress(member) {
+  return calculateMemberProgress(member)
+}
+
+function getMemberActiveTypes(member) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan) return 0
+  
+  let activeTypes = 0
+  Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    const memberValue = amalanData[member] || 0
+    if (memberValue > 0) {
+      activeTypes++
+    }
+  })
+  
+  return activeTypes
+}
+
+function getMemberTotalAmalan(member) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan) return 0
+  
+  let total = 0
+  Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    total += amalanData[member] || 0
+  })
+  
+  return total
+}
+
+function getMemberTopRoutine(member) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan) {
+    return { name: 'Belum ada data', frequency: '0%' }
+  }
+  
+  let topAmalan = 'Belum ada data'
+  let maxPercentage = 0
+  
+  Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
+    const memberValue = amalanData[member] || 0
+    const weeklyTarget = amalanWeeklyTargets.value[amalanName] || 1
+    const monthlyTarget = weeklyTarget * 4
+    
+    // Hitung percentage achievement relative to target
+    const percentage = (memberValue / monthlyTarget) * 100
+    
+    if (percentage > maxPercentage && memberValue > 0) {
+      maxPercentage = percentage
+      topAmalan = amalanName
+    }
+  })
+  
+  const displayPercentage = maxPercentage > 0 ? `${Math.round(Math.min(maxPercentage, 100))}%` : '0%'
+  
+  return {
+    name: topAmalan,
+    frequency: displayPercentage
+  }
+}
+
+function getAmalanValue(amalanName, memberName) {
+  const reportData = amalanStore.monthlyReportData
+  
+  if (!reportData || !reportData.amalan || !reportData.amalan[amalanName]) {
+    return 0
+  }
+  
+  return reportData.amalan[amalanName][memberName] || 0
+}
+
+function getValueColorClass(value) {
+  if (value > 0) {
+    return 'text-green-600 bg-green-50'
+  }
+  return 'text-gray-400 bg-gray-50'
+}
+
+function getRankClasses(index) {
+  const classes = [
+    'bg-gradient-to-r from-yellow-400 to-orange-500',
+    'bg-gradient-to-r from-gray-400 to-gray-500',
+    'bg-gradient-to-r from-orange-400 to-orange-500',
+    'bg-gradient-to-r from-blue-400 to-blue-500'
+  ]
+  return classes[index] || classes[3]
+}
+
+function getProgressColor(index) {
+  const colors = [
+    'bg-gradient-to-r from-yellow-400 to-orange-500',
+    'bg-gradient-to-r from-gray-400 to-gray-500',
+    'bg-gradient-to-r from-orange-400 to-orange-500',
+    'bg-gradient-to-r from-blue-400 to-blue-500'
+  ]
+  return colors[index] || colors[3]
+}
+
+// ✅ UPDATED: Export Excel dengan Member Total Percentage
 async function exportToExcel() {
   try {
     isExporting.value = true
-    console.log('🎨 Creating beautiful Excel with ExcelJS...')
+    console.log('🎨 Creating beautiful Excel with member percentage analysis...')
     
     const ExcelJS = (await import('exceljs')).default
     
@@ -450,7 +548,7 @@ async function exportToExcel() {
     
     const monthName = getMonthName(selectedMonth.value)
     
-    // 🎨 CREATE BEAUTIFUL WORKBOOK dengan ExcelJS
+    // 🎨 CREATE BEAUTIFUL WORKBOOK
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet(`📊 Laporan ${monthName}`, {
       properties: { 
@@ -458,7 +556,7 @@ async function exportToExcel() {
       }
     })
     
-    // 🎨 STYLING DEFINITIONS
+    // ... [STYLING DEFINITIONS SAME AS BEFORE] ...
     const headerStyle = {
       font: { 
         name: 'Calibri', 
@@ -480,24 +578,6 @@ async function exportToExcel() {
         left: { style: 'thick' },
         bottom: { style: 'thick' },
         right: { style: 'thick' }
-      }
-    }
-    
-    const subHeaderStyle = {
-      font: { 
-        name: 'Calibri', 
-        size: 12, 
-        bold: true, 
-        color: { argb: 'FFFFFFFF' } 
-      },
-      fill: {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF7C3AED' }
-      },
-      alignment: { 
-        horizontal: 'center', 
-        vertical: 'middle' 
       }
     }
     
@@ -525,10 +605,10 @@ async function exportToExcel() {
       }
     }
     
-    const totalCols = 2 + MEMBERS.length + 1  // Nama + Target + Members + Total
+    const totalCols = 2 + MEMBERS.length
     const lastCol = String.fromCharCode(64 + totalCols)
 
-    // 📍 HEADER SECTION
+    // 📍 HEADER SECTION (same as before)
     worksheet.mergeCells(`A1:${lastCol}1`)
     worksheet.getCell('A1').value = '📊 LAPORAN AMALAN HARIAN'
     worksheet.getCell('A1').style = headerStyle
@@ -536,7 +616,10 @@ async function exportToExcel() {
     
     worksheet.mergeCells(`A2:${lastCol}2`)
     worksheet.getCell('A2').value = `📅 Periode: ${monthName} ${selectedYear.value}`
-    worksheet.getCell('A2').style = subHeaderStyle
+    worksheet.getCell('A2').style = {
+      ...headerStyle,
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7C3AED' } }
+    }
     worksheet.getRow(2).height = 25
     
     worksheet.mergeCells(`A3:${lastCol}3`)
@@ -563,15 +646,14 @@ async function exportToExcel() {
         vertical: 'middle' 
       }
     }
-    worksheet.getRow(3).height = 20
     
     // Empty rows
     worksheet.getRow(4).height = 10
     worksheet.getRow(5).height = 10
     
     // 🏆 TABLE HEADER - Row 6
-    const headers = ['📋 NAMA AMALAN', '🎯 TARGET', ...MEMBERS.map(m => `🧕 ${m}`), '📊 TOTAL']
-    const headerColors = ['FF10B981', 'FFF59E0B', ...MEMBERS.map(() => 'FF3B82F6'), 'FFEF4444']
+    const headers = ['📋 NAMA AMALAN', '🎯 TARGET', ...MEMBERS.map(m => `🧕 ${m}`)]
+    const headerColors = ['FF10B981', 'FFF59E0B', ...MEMBERS.map(() => 'FF3B82F6')]
     
     headers.forEach((header, index) => {
       const cell = worksheet.getCell(6, index + 1)
@@ -593,7 +675,6 @@ async function exportToExcel() {
       const data = amalanData[amalan] || {}
       const target = amalanTargets.value[amalan] || '-'
       const memberValues = MEMBERS.map(member => data[member] || 0)
-      const total = memberValues.reduce((sum, val) => sum + val, 0)
       
       const row = worksheet.getRow(currentRow)
       
@@ -603,7 +684,6 @@ async function exportToExcel() {
       MEMBERS.forEach((member, index) => {
         row.getCell(3 + index).value = data[member] || 0
       })
-      row.getCell(3 + MEMBERS.length).value = total
       
       // Styling per cell
       const isEven = index % 2 === 0
@@ -654,26 +734,62 @@ async function exportToExcel() {
         }
       }
       
-      // Total
-      row.getCell(3 + MEMBERS.length).style = {
-        font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } },
-        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } },
-        alignment: { horizontal: 'center', vertical: 'middle' },
-        border: {
-          top: { style: 'thin', color: { argb: 'FFD1D5DB' } },
-          left: { style: 'thin', color: { argb: 'FFD1D5DB' } },
-          bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
-          right: { style: 'thin', color: { argb: 'FFD1D5DB' } }
-        }
-      }
-      
       row.height = 20
       currentRow++
     })
     
-    // 📈 SUMMARY SECTION
-    currentRow += 2
+    // ✅ NEW: MEMBER TOTAL PERCENTAGE ROW
+    currentRow += 1
     
+    // Header untuk member totals
+    worksheet.getCell(currentRow, 1).value = '👥 TOTAL MEMBER (%)'
+    worksheet.getCell(currentRow, 1).style = {
+      font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } },
+      alignment: { horizontal: 'left', vertical: 'middle' },
+      border: {
+        top: { style: 'medium' },
+        left: { style: 'medium' },
+        bottom: { style: 'medium' },
+        right: { style: 'medium' }
+      }
+    }
+    
+    worksheet.getCell(currentRow, 2).value = 'Progress Amalan'
+    worksheet.getCell(currentRow, 2).style = {
+      font: { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } },
+      alignment: { horizontal: 'center', vertical: 'middle' },
+      border: {
+        top: { style: 'medium' },
+        left: { style: 'medium' },
+        bottom: { style: 'medium' },
+        right: { style: 'medium' }
+      }
+    }
+    
+    // Member percentage values
+    MEMBERS.forEach((member, index) => {
+      const memberPercentage = calculateMemberProgressForExport(member, amalanData)
+      
+      worksheet.getCell(currentRow, 3 + index).value = `${memberPercentage}%`
+      worksheet.getCell(currentRow, 3 + index).style = {
+        font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } },
+        alignment: { horizontal: 'center', vertical: 'middle' },
+        border: {
+          top: { style: 'medium' },
+          left: { style: 'medium' },
+          bottom: { style: 'medium' },
+          right: { style: 'medium' }
+        }
+      }
+    })
+    
+    worksheet.getRow(currentRow).height = 25
+    currentRow += 4
+    
+    // 📈 SUMMARY SECTION
     worksheet.getCell(currentRow, 1).value = '📈 RINGKASAN LAPORAN'
     worksheet.getCell(currentRow, 1).style = {
       font: { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } },
@@ -685,37 +801,20 @@ async function exportToExcel() {
     
     currentRow += 2
     
-    // Calculate totals per member
-    const memberTotals = {}
-    MEMBERS.forEach(member => {
-      let total = 0
-      Object.entries(amalanData).forEach(([amalanName, amalanMemberData]) => {
-        total += amalanMemberData[member] || 0
-      })
-      memberTotals[member] = total
-    })
+    // Family average
+    const familyAvg = MEMBERS.map(member => calculateMemberProgressForExport(member, amalanData))
+      .reduce((sum, p) => sum + p, 0) / MEMBERS.length
     
-    // Add member summary with beautiful styling
-    worksheet.getCell(currentRow, 1).value = '👥 TOTAL PER ANGGOTA:'
+    worksheet.getCell(currentRow, 1).value = '👨‍👩‍👧‍👦 RATA-RATA KELUARGA:'
+    worksheet.getCell(currentRow, 2).value = `${Math.round(familyAvg)}%`
+    
     worksheet.getCell(currentRow, 1).style = {
       font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF1F2937' } },
       fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } }
     }
-    currentRow++
-    
-    Object.entries(memberTotals).forEach(([member, total]) => {
-      worksheet.getCell(currentRow, 1).value = `${member}:`
-      worksheet.getCell(currentRow, 2).value = `${total} amalan`
-      
-      worksheet.getCell(currentRow, 1).style = {
-        font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF3B82F6' } }
-      }
-      worksheet.getCell(currentRow, 2).style = {
-        font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF10B981' } }
-      }
-      currentRow++
-    })
-    
+    worksheet.getCell(currentRow, 2).style = {
+      font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF10B981' } }
+    }
     currentRow += 2
     
     // 📋 NOTES SECTION  
@@ -728,8 +827,8 @@ async function exportToExcel() {
     
     const notes = [
       useRealData ? '✅ Data real dari database' : '⚠️ Data sample untuk testing',
-      '📋 Target menunjukkan frekuensi ideal per amalan',
-      `🎯 Total = ${MEMBERS.join(' + ')}`,
+      '📊 Progress Member = rata-rata pencapaian 11 jenis amalan',
+      '🎯 Maksimal 100% per amalan (excess = sedekah)',
       '💡 Hijau = ada progress, Abu-abu = belum ada data'
     ]
     
@@ -747,10 +846,9 @@ async function exportToExcel() {
     MEMBERS.forEach((member, index) => {
       worksheet.getColumn(3 + index).width = 10 // Member columns
     })
-    worksheet.getColumn(3 + MEMBERS.length).width = 12 // TOTAL
     
     // 💾 DOWNLOAD FILE
-    const fileName = `📊 Laporan_Amalan_${monthName}_${selectedYear.value}.xlsx`
+    const fileName = `📊 Laporan_Amalan_${monthName}_${selectedYear.value}_with_Progress.xlsx`
     
     // Create buffer and download
     const buffer = await workbook.xlsx.writeBuffer()
@@ -766,22 +864,33 @@ async function exportToExcel() {
     link.click()
     window.URL.revokeObjectURL(url)
     
-    console.log('✨ Beautiful ExcelJS export completed successfully')
-    uiStore.showToast('✨ Berhasil export Excel!', 'success')
+    console.log('✨ Excel export with member progress completed successfully')
+    uiStore.showToast('✨ Berhasil export Excel dengan analisis progress!', 'success')
     
   } catch (error) {
-    console.error('❌ ExcelJS export error:', error)
-    
-    let errorMessage = 'Gagal export ke Excel'
-    if (error.message && error.message.includes('ExcelJS')) {
-      errorMessage = 'Library ExcelJS belum terinstall. Jalankan: npm install exceljs'
-    }
-    
-    uiStore.showToast(errorMessage, 'error')
-    
+    console.error('❌ Excel export error:', error)
+    uiStore.showToast('Gagal export ke Excel', 'error')
   } finally {
     isExporting.value = false
   }
+}
+
+function calculateMemberProgressForExport(memberName, amalanData) {
+  const progressList = Object.entries(AMALAN_CONFIG).map(([amalanName, config]) => {
+    const achieved = amalanData[amalanName]?.[memberName] || 0
+    const weeklyTarget = config.weeklyTarget
+    const monthlyTarget = weeklyTarget * 4  // Monthly = Weekly × 4
+    
+    if (monthlyTarget === 0) return 0
+    
+    // ✅ CAP AT 100% per amalan (excess = sedekah)
+    const progress = Math.min((achieved / monthlyTarget) * 100, 100)
+    return progress
+  })
+  
+  // Average dari semua progress amalan
+  const average = progressList.reduce((sum, progress) => sum + progress, 0) / progressList.length
+  return Math.round(average)
 }
 
 // Other methods
@@ -799,92 +908,6 @@ async function loadReportData() {
   } finally {
     isLoading.value = false
   }
-}
-
-function getMemberActiveTypes(member) {
-  const reportData = amalanStore.monthlyReportData
-  
-  if (!reportData || !reportData.amalan) {
-    return 0
-  }
-  
-  let activeTypes = 0
-  Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
-    const memberValue = amalanData[member] || 0
-    if (memberValue > 0) {
-      activeTypes++
-    }
-  })
-  
-  return activeTypes
-}
-
-function getMemberTopRoutine(member) {
-  const reportData = amalanStore.monthlyReportData
-  
-  if (!reportData || !reportData.amalan) {
-    return { name: 'Belum ada data', frequency: '0%' }
-  }
-  
-  let topAmalan = 'Belum ada data'
-  let maxPercentage = 0
-  
-  Object.entries(reportData.amalan).forEach(([amalanName, amalanData]) => {
-    const memberValue = amalanData[member] || 0
-    const weeklyTarget = amalanWeeklyTargets.value[amalanName] || 1
-    
-    // Hitung percentage achievement relative to target
-    const percentage = (memberValue / weeklyTarget) * 100
-    
-    if (percentage > maxPercentage && memberValue > 0) {
-      maxPercentage = percentage
-      topAmalan = amalanName
-    }
-  })
-  
-  const displayPercentage = maxPercentage > 0 ? `${Math.round(maxPercentage)}%` : '0%'
-  
-  return {
-    name: topAmalan,
-    frequency: displayPercentage
-  }
-}
-
-function getAmalanValue(amalanName, memberName) {
-  const reportData = amalanStore.monthlyReportData
-  
-  if (!reportData || !reportData.amalan || !reportData.amalan[amalanName]) {
-    return 0
-  }
-  
-  return reportData.amalan[amalanName][memberName] || 0
-}
-
-function getValueColorClass(value) {
-  if (value > 0) {
-    return 'text-green-600 bg-green-50'
-  }
-  return 'text-gray-400 bg-gray-50'
-}
-
-function getRankClasses(index) {
-  const classes = [
-    'bg-gradient-to-r from-yellow-400 to-orange-500',
-    'bg-gradient-to-r from-gray-400 to-gray-500',
-    'bg-gradient-to-r from-orange-400 to-orange-500',
-    'bg-gradient-to-r from-blue-400 to-blue-500'
-  ]
-  return classes[index] || classes[3]
-}
-
-function getProgressColor(index) {
-  const colors = [
-    'bg-gradient-to-r from-yellow-400 to-orange-500',
-    'bg-gradient-to-r from-gray-400 to-gray-500',
-    'bg-gradient-to-r from-orange-400 to-orange-500',
-    'bg-gradient-to-r from-blue-400 to-blue-500'
-  ]
-  return colors[index] || colors[3]
 }
 
 onMounted(async () => {
