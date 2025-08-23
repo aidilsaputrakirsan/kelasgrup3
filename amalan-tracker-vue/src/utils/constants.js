@@ -1,6 +1,6 @@
 // 📄 src/utils/constants.js - TAMBAH UNTUK HARI HALANGAN
 
-export const MEMBERS = ['ATK', 'AYS', 'FTR', 'WIN', 'HMA']
+export const MEMBERS = ['ATK', 'AYS', 'FTR', 'WIN', 'HMA', 'LSP']
 
 // ✅ DEFAULT_AMALAN: TIDAK DIUBAH - Hari Halangan bukan amalan
 export const DEFAULT_AMALAN = [
@@ -25,7 +25,7 @@ export const HARI_HALANGAN = {
 }
 
 export const API_CONFIG = {
-  BASE_URL: 'https://script.google.com/macros/s/AKfycbzO8f__fF7QJzQsCBRXAEMtQQhy41WFgj1vZVq_VJLL7XBsYKwiGp4u8AAlGV6ZWThG/exec',
+  BASE_URL: 'https://script.google.com/macros/s/AKfycbzFeBRdVyvM_CpFYQvJelyDOKj5hKSc3p2mPyATUmwFOexcNQDGUAcaezBZYgOFV3SN/exec',
   TIMEOUT: 30000,
   RETRY_COUNT: 3,
   RETRY_DELAY: 1000,
